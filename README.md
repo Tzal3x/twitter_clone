@@ -18,3 +18,7 @@ with likes, retweets, and replies complete.
 Our dev skills will start to shine,
 
 as we create a clone that's truly divine.
+
+
+## Requirements
+Python **3.11**
