@@ -20,7 +20,7 @@ def upgrade() -> None:
     op.create_table('follows',
     sa.Column('follower_id', sa.Integer(), nullable=False),
     sa.Column('followee_id', sa.Integer(), nullable=False),
-    sa.Column('is_active', sa.Boolean(), server_default=True, nullable=False),
+    sa.Column('is_active', sa.Boolean(), server_default='TRUE', nullable=False),
     sa.Column('created_at', sa.TIMESTAMP(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('updated_at', sa.TIMESTAMP(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.ForeignKeyConstraint(['followee_id'], ['users.id'], ),

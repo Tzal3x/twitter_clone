@@ -21,7 +21,7 @@ def upgrade() -> None:
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('title', sa.Unicode(), nullable=False),
     sa.Column('body', sa.UnicodeText(), nullable=False),
-    sa.Column('is_active', sa.Boolean(), server_default=True, nullable=False),
+    sa.Column('is_active', sa.Boolean(), server_default='TRUE', nullable=False),
     sa.Column('created_at', sa.TIMESTAMP(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('updated_at', sa.TIMESTAMP(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=True),
