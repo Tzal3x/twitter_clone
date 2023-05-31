@@ -1,17 +1,29 @@
+from datetime import datetime, date
 from pydantic import BaseModel
 
-# TODO all of these were just copy pasted!
+
 class UserBase(BaseModel):
+    username: str | None = None
+    first_name: str | None = None
+    last_name: str | None = None
+    birth: date
     email: str
+    phone_number: str
+    bio: str | None = None
 
 
 class UserCreate(UserBase):
     password: str
 
 
-class User(UserBase):
+class UserReturn(UserBase):
     id: int
     is_active: bool
+    created_at: datetime
+    updated_at: datetime 
+
+    # TODO: tweets: List[Tweets]
+    # TODO: comments: List[Comments]
 
     class Config:
         orm_mode = True
