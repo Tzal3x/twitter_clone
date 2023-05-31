@@ -7,22 +7,27 @@ router = APIRouter(
 )
 
 
-@router.get()
+@router.get("/me")
 def get_user_info():
     pass  
 
 
-@router.post()
+@router.get("/{id}")
+def get_user_info(id: int):
+    pass  
+
+
+@router.post("/")
 def register_user():
     pass
 
 
-@router.put()
+@router.put("/")
 def update_user_info():
     pass
 
 
-@router.delete()
+@router.delete("/")
 def delete_user_account():
     pass
 

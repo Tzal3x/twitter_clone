@@ -1,15 +1,13 @@
 """SQL Alchemy (ORM) & Alembic (Migration Tool)"""
 from datetime import datetime
 
-from sqlalchemy.orm import declarative_base, relationship
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql.sqltypes import TIMESTAMP
 from sqlalchemy.sql.expression import text
 from sqlalchemy import (
     Column, ForeignKey, Unicode, UnicodeText, Integer, String, DateTime, Boolean
     )
-
-
-Base = declarative_base()
+from .database import Base
 
 
 class Users(Base):
