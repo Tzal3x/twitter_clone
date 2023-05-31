@@ -34,7 +34,11 @@ def upgrade() -> None:
     sa.Column('is_active', sa.Boolean(), server_default='TRUE', nullable=False),
     sa.Column('created_at', sa.TIMESTAMP(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('updated_at', sa.TIMESTAMP(timezone=True), server_default=sa.text('now()'), nullable=False),
-    sa.PrimaryKeyConstraint('id')
+    sa.Column('password', sa.Unicode(), nullable=False),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('username'),
+    sa.UniqueConstraint('email'),
+    sa.UniqueConstraint('phone_number'),
     )
 
 
