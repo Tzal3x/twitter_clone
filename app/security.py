@@ -12,20 +12,18 @@ security_configs = get_security_configs()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-class Authenticator:
-    @staticmethod
-    def authenticate_user(db, username: str, password: str) -> Users | None:
-        user = Queries.get_user(db, username)
-        if not user:
-            return False
-        if not Authenticator.verify_password(password, user.password):
-            return False
-        return user    
 
-    @staticmethod
-    def verify_password(plain_password: str, hashed_password: str) -> bool:
-        marinated_password = plain_password + security_configs["PASSWORD_HASH_SALT"]
-        return pwd_context.verify(marinated_password, hashed_password)
+def authenticate_user(db, username: str, password: str) -> Users | None:
+    user = Queries.get_user(db, username)
+    if not user:
+        return False
+    if not verify_password(password, user.password):
+        return False
+    return user    
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    marinated_password = plain_password + security_configs["PASSWORD_HASH_SALT"]
+    return pwd_context.verify(marinated_password, hashed_password)
 
 
 def get_password_hash(password: str) -> str:
