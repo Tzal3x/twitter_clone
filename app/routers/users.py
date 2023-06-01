@@ -1,10 +1,13 @@
 from typing import Annotated
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Query, Body, status, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy import exc
 import app.schemas as schemas
 from app.models import Users
 from app.database import get_db
 from app.security import get_password_hash, authorize_user
+from app.queries import Queries
+
 
 router = APIRouter(
     prefix="/users",
@@ -14,7 +17,7 @@ router = APIRouter(
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
-def create_user(user: schemas.UserCreate, 
+def create_user(user: schemas.UserBase, 
                 db: Session = Depends(get_db),
                 ) -> schemas.UserReturn:
     hashed_password = get_password_hash(user.password)
@@ -28,23 +31,46 @@ def create_user(user: schemas.UserCreate,
 
 
 @router.get("/me", status_code=status.HTTP_200_OK)
-def get_user_info(user: Annotated[Users, Depends(authorize_user)]) -> schemas.UserReturn:
-    # TODO add error handling and custom error messages
-    if user:
-        return user
+def get_current(user: Annotated[Users, Depends(authorize_user)]) -> schemas.UserReturn:
+    return user
 
 
-@router.get("/{id}")
-def get_user_info(id: int):
-    pass  
+@router.get("/", status_code=status.HTTP_200_OK)
+def get_specific_user(username: Annotated[str, Query],
+                      _: Annotated[Users, Depends(authorize_user)],
+                      db: Session = Depends(get_db)) -> schemas.UserReturn:
+    user = Queries.get_user(db, username)
+    print(user)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User was not found.")
+    return user
 
 
-@router.put("/")
-def update_user_info():
-    pass
+# Using patch to partially update the user's info.
+@router.patch("/", status_code=status.HTTP_204_NO_CONTENT)
+def update_current_user_info(
+    update_user: Annotated[schemas.UserUpdate, Body],
+    db: Session = Depends(get_db), 
+    user = Annotated[Users, Depends(authorize_user)]
+    ):
+
+    update_data = update_user.dict(exclude_unset=True)
+    try:
+        db.query(Users).filter(Users.username == user.username).update(update_data)
+        db.commit()
+    except exc.SQLAlchemyError:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+                            detail="Could user not update fields.")  #TODO: Change status to a better suiting one
 
 
-@router.delete("/")
-def delete_user_account():
-    pass
-
+@router.delete("/", status_code=status.HTTP_204_NO_CONTENT)
+def delete_current_account(
+    db: Session = Depends(get_db), 
+    user = Annotated[Users, Depends(authorize_user)]
+    ):
+    try:
+        db.query(Users).filter(Users.username == user.username).delete()
+        db.commit()
+    except exc.SQLAlchemyError:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+                            detail="Could not delete user.") 

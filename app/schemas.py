@@ -18,6 +18,13 @@ class UserBase(BaseModel):
     bio: str | None = None
 
 
+class UserUpdate(BaseModel):
+    first_name: str | None = None
+    last_name: str | None = None
+    birth: date | None = None
+    bio: str | None = None
+
+
 class UserCreate(UserBase):
     password: str
 
