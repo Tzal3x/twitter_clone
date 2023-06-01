@@ -1,11 +1,14 @@
+from typing import Annotated, Any
 from datetime import datetime, timedelta
 from fastapi.security import OAuth2PasswordBearer
+from fastapi import status, HTTPException, Depends
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
-from jose import jwt
+from jose import jwt, JWTError
 from app.models import Users
 from app.helpers import get_security_configs
 from app.queries import Queries
+from app.database import get_db
 
 
 security_configs = get_security_configs()
@@ -21,14 +24,42 @@ def authenticate_user(db, username: str, password: str) -> Users | None:
         return False
     return user    
 
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    marinated_password = plain_password + security_configs["PASSWORD_HASH_SALT"]
-    return pwd_context.verify(marinated_password, hashed_password)
+
+def authorize_user(token: Annotated[str, Depends(oauth2_scheme)],
+                   db: Session = Depends(get_db)) -> Users:
+    
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = decode_access_token(token)
+        username: str = payload.get("sub")
+        if username is None:
+            raise credentials_exception
+        
+        expiration_unix_timestamp = datetime.utcfromtimestamp(int(payload['exp']))
+        token_has_expired = datetime.utcnow() > expiration_unix_timestamp
+        if token_has_expired:
+            raise credentials_exception
+        
+    except JWTError:
+        raise credentials_exception
+    
+    user = Queries.get_user(db, username=username)
+    if user is None:
+        raise credentials_exception
+    
+    return user
+
+
+def verify_password(password: str, hashed_password: str) -> bool:
+    return pwd_context.verify(password, hashed_password)
 
 
 def get_password_hash(password: str) -> str:
-    marinated_password = password + security_configs["PASSWORD_HASH_SALT"]
-    return pwd_context.hash(marinated_password)
+    return pwd_context.hash(password)
 
 
 def create_access_token(data: dict, 
@@ -43,3 +74,13 @@ def create_access_token(data: dict,
                              algorithm=security_configs["HASH_ALGORITHM"])
     return encoded_jwt
 
+
+def decode_access_token(token: str) -> dict[str, Any]:
+    """
+    Verify that the access token is valid. 
+    """
+
+    return jwt.decode(token, 
+                      security_configs["TOKEN_CREATION_SECRET_KEY"], 
+                      algorithms=[security_configs["HASH_ALGORITHM"]])
+ 

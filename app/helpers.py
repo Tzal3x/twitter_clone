@@ -29,5 +29,4 @@ def get_security_configs() -> dict[str]:
         "TOKEN_CREATION_SECRET_KEY": env_vars["TOKEN_CREATION_SECRET_KEY"],
         "HASH_ALGORITHM": env_vars["HASH_ALGORITHM"],
         "ACCESS_TOKEN_EXPIRE_MINUTES": int(env_vars["ACCESS_TOKEN_EXPIRE_MINUTES"]),
-        "PASSWORD_HASH_SALT": env_vars["PASSWORD_HASH_SALT"],
     }
