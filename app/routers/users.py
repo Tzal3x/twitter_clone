@@ -13,23 +13,6 @@ router = APIRouter(
 )
 
 
-#TODO implement the users CRUD
-#TODO set correct status codes
-#TODO add exception handling
-#TODO add unit tests for the users CRUD
-@router.post("/")
-def create_user(user: schemas.UserCreate, 
-                db: Session = Depends(get_db)) -> schemas.UserReturn:
-    hashed_password = get_password_hash(user.password)
-    user_body = user.dict()
-    user_body["password"] = hashed_password
-    db_user = Users(**user_body)
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
-    return db_user
-
-
 @router.get("/me")
 def get_user_info():
     pass  
