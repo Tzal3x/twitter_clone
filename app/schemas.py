@@ -9,10 +9,10 @@ class Token(BaseModel):
 
 
 class UserBase(BaseModel):
-    username: str | None = None
+    username: str
     first_name: str | None = None
     last_name: str | None = None
-    birth: date
+    birth: date | None = None
     email: str
     phone_number: str
     bio: str | None = None

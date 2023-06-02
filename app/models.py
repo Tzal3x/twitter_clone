@@ -20,7 +20,7 @@ class Users(Base):
     birth = Column(DateTime)
     email = Column(String(254), nullable=False)
     phone_number = Column(String(15), nullable=False)
-    bio = Column(Unicode(160), nullable=True)
+    bio = Column(Unicode(160))
     is_active = Column(Boolean, server_default='TRUE', nullable=False)
     created_at = Column(TIMESTAMP(timezone=True), server_default=text('now()'), nullable=False)
     updated_at = Column(TIMESTAMP(timezone=True), server_default=text('now()'), nullable=False)
