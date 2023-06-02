@@ -17,16 +17,20 @@ router = APIRouter(
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
-def create_user(user: schemas.UserBase, 
+def create_user(user: schemas.UserCreate, 
                 db: Session = Depends(get_db),
                 ) -> schemas.UserReturn:
     hashed_password = get_password_hash(user.password)
     user_body = user.dict()
     user_body["password"] = hashed_password
     db_user = Users(**user_body)
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
+    try:
+        db.add(db_user)
+        db.commit()
+        db.refresh(db_user)
+    except exc.IntegrityError:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT,
+                            detail="Username, email or phone number already exist.")
     return db_user
 
 
