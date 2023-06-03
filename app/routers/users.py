@@ -54,8 +54,8 @@ def get_specific_user(username: Annotated[str, Query],
 @router.patch("/", status_code=status.HTTP_204_NO_CONTENT)
 def update_current_user_info(
     update_user: Annotated[schemas.UserUpdate, Body],
+    user: Annotated[Users, Depends(authorize_user)],
     db: Session = Depends(get_db), 
-    user = Annotated[Users, Depends(authorize_user)]
     ):
 
     update_data = update_user.dict(exclude_unset=True)
@@ -69,8 +69,8 @@ def update_current_user_info(
 
 @router.delete("/", status_code=status.HTTP_204_NO_CONTENT)
 def delete_current_account(
+    user: Annotated[Users, Depends(authorize_user)],
     db: Session = Depends(get_db), 
-    user = Annotated[Users, Depends(authorize_user)]
     ):
     try:
         db.query(Users).filter(Users.username == user.username).delete()
