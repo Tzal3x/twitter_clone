@@ -1,15 +1,13 @@
 """SQL Alchemy (ORM) & Alembic (Migration Tool)"""
 from datetime import datetime
 
-from sqlalchemy.orm import declarative_base, relationship
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql.sqltypes import TIMESTAMP
 from sqlalchemy.sql.expression import text
 from sqlalchemy import (
-    Column, ForeignKey, Unicode, UnicodeText, Integer, String, DateTime, Boolean
+    Column, ForeignKey, Unicode, UnicodeText, Integer, String, DateTime, Boolean,
     )
-
-
-Base = declarative_base()
+from .database import Base
 
 
 class Users(Base):
@@ -20,13 +18,14 @@ class Users(Base):
     first_name = Column(Unicode)
     last_name = Column(Unicode)
     birth = Column(DateTime)
-    email = Column(String(254), nullable=False) # ToDo - It should be unique
+    email = Column(String(254), nullable=False)
     phone_number = Column(String(15), nullable=False)
-    bio = Column(Unicode(160), nullable=True)
+    bio = Column(Unicode(160))
     is_active = Column(Boolean, server_default='TRUE', nullable=False)
     created_at = Column(TIMESTAMP(timezone=True), server_default=text('now()'), nullable=False)
     updated_at = Column(TIMESTAMP(timezone=True), server_default=text('now()'), nullable=False)
-    
+    password = Column(String, nullable=False)
+
     tweets = relationship("Tweets", back_populates="user")
     comments = relationship("Comments", back_populates="user")
 
