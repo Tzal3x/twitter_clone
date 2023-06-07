@@ -4,14 +4,9 @@ TODO test_invalid_patching(user) Try changing username or email
 """
 
 import pytest
-from fastapi.testclient import TestClient
 from fastapi import status
-from app.main import app
 import app.tests.users.user_cases as cases
 from app.security import create_access_token
-
-
-client = TestClient(app)
 
 
 def create_header(username):
@@ -20,14 +15,14 @@ def create_header(username):
 
 
 @pytest.mark.parametrize("user", cases.users)
-def test_create_user(user):
+def test_create_user(user, client):
     response = client.post("users/", json=user)
     assert response.status_code == status.HTTP_201_CREATED
 
 
 @pytest.mark.depends(on=['test_create_user'])
 @pytest.mark.parametrize("user", cases.users)
-def test_get_current(user):
+def test_get_current(user, client):
     response = client.get("users/me",
                           headers=create_header(user["username"]))
     assert response.status_code == status.HTTP_200_OK
@@ -35,7 +30,7 @@ def test_get_current(user):
 
 @pytest.mark.depends(on=['test_create_user'])
 @pytest.mark.parametrize("user", cases.users)
-def test_get_specific_user(user):
+def test_get_specific_user(user, client):
     response = client.get("users/?username=%s" % user["username"],
                           headers=create_header(user["username"]))
     assert response.status_code == status.HTTP_200_OK
@@ -43,7 +38,7 @@ def test_get_specific_user(user):
 
 @pytest.mark.depends(on=['test_create_user'])
 @pytest.mark.parametrize("user", cases.users[:2])
-def test_update_current_user_info(user):
+def test_update_current_user_info(user, client):
     response = client.patch("users/", 
                             json={
                                 "first_name": "Updated Name",
@@ -57,6 +52,6 @@ def test_update_current_user_info(user):
 
 @pytest.mark.depends(on=['test_create_user'])
 @pytest.mark.parametrize("user", cases.users[:2])
-def test_delete_current_account(user):
+def test_delete_current_account(user, client):
     response = client.delete("users/", headers=create_header(user["username"]))
     assert response.status_code == status.HTTP_204_NO_CONTENT

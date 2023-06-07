@@ -7,7 +7,7 @@ from sqlalchemy.sql.expression import text
 from sqlalchemy import (
     Column, ForeignKey, Unicode, UnicodeText, Integer, String, DateTime, Boolean,
     )
-from .database import Base
+from app.database import Base
 
 
 class Users(Base):
@@ -35,7 +35,7 @@ class Tweets(Base):
     
     id = Column(Integer, primary_key=True)
     title = Column(Unicode, nullable=False)
-    description = Column(UnicodeText, nullable=False)
+    body = Column(UnicodeText, nullable=False)
     user_id = Column(Integer, ForeignKey('users.id'))
     is_active = Column(Boolean, server_default='TRUE', nullable=False)
     created_at = Column(TIMESTAMP(timezone=True), server_default=text('now()'), nullable=False)
