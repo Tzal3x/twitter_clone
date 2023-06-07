@@ -1,5 +1,4 @@
 from datetime import datetime, date
-from datetime import datetime, date
 from pydantic import BaseModel
 
 
@@ -41,10 +40,30 @@ class UserReturn(UserBase):
     class Config:
         orm_mode = True
 
-
 class FollowersReturn(BaseModel):
     followers: list[str] | list[None]
 
 
 class FollowingReturn(BaseModel):
     followees: list[str] | list[None]
+        
+        
+class TweetBase(BaseModel):
+    title: str
+    body: str
+
+
+class TweetReturn(TweetBase):
+    id: int
+    user_id: int
+    created_at: datetime
+    updated_at: datetime
+    
+    class Config:
+        orm_mode = True
+        
+
+class TweetUpdate(BaseModel):
+    title: str | None = None
+    body: str | None = None
+    

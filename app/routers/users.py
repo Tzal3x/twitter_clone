@@ -2,7 +2,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Query, Body, status, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import exc
-import app.schemas as schemas
+from app import schemas
 from app.models import Users
 from app.database import get_db
 from app.security import get_password_hash, authorize_user
