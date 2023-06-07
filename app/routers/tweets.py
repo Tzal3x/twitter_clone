@@ -63,6 +63,7 @@ def create_tweet(tweet: TweetBase,
         db.commit()
         db.refresh(new_tweet)
     except DataError:
+        db.rollback()
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail="Title or body character limit exceeded")
         

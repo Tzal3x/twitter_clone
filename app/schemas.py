@@ -59,5 +59,3 @@ class TweetReturn(TweetBase):
 class TweetUpdate(BaseModel):
     title: str | None = None
     body: str | None = None
-    
-

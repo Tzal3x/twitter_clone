@@ -29,6 +29,7 @@ def create_user(user: schemas.UserCreate,
         db.commit()
         db.refresh(db_user)
     except exc.IntegrityError:
+        db.rollback()
         raise HTTPException(status_code=status.HTTP_409_CONFLICT,
                             detail="Username, email or phone number already exist.")
     return db_user
@@ -63,6 +64,7 @@ def update_current_user_info(
         db.query(Users).filter(Users.username == user.username).update(update_data)
         db.commit()
     except exc.SQLAlchemyError:
+        db.rollback()
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
                             detail="Could user not update fields.")  #TODO: Change status to a better suiting one
 
@@ -76,5 +78,6 @@ def delete_current_account(
         db.query(Users).filter(Users.username == user.username).delete()
         db.commit()
     except exc.SQLAlchemyError:
+        db.rollback()
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
                             detail="Could not delete user.") 
