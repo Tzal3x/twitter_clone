@@ -59,3 +59,15 @@ class TweetReturn(TweetBase):
 class TweetUpdate(BaseModel):
     title: str | None = None
     body: str | None = None
+    
+    
+class CommentCreate(BaseModel):
+    body: str
+    
+    
+class CommentReturn(CommentCreate):
+    id: int
+    user_id: int
+    tweet_id: int
+    created_at: datetime
+    updated_at: datetime
