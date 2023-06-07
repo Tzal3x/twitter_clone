@@ -40,3 +40,11 @@ class UserReturn(UserBase):
 
     class Config:
         orm_mode = True
+
+
+class FollowersReturn(BaseModel):
+    followers: list[str] | list[None]
+
+
+class FollowingReturn(BaseModel):
+    followees: list[str] | list[None]
