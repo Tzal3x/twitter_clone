@@ -39,6 +39,13 @@ class UserReturn(UserBase):
 
     class Config:
         orm_mode = True
+
+class FollowersReturn(BaseModel):
+    followers: list[str] | list[None]
+
+
+class FollowingReturn(BaseModel):
+    followees: list[str] | list[None]
         
         
 class TweetBase(BaseModel):
@@ -60,7 +67,7 @@ class TweetUpdate(BaseModel):
     title: str | None = None
     body: str | None = None
     
-    
+ 
 class CommentCreate(BaseModel):
     body: str
     
