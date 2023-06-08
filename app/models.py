@@ -87,6 +87,4 @@ class Follows(Base):
     
     follower_id = Column(Integer, ForeignKey('users.id'), primary_key=True)
     followee_id = Column(Integer, ForeignKey('users.id'), primary_key=True)
-    is_active = Column(Boolean, server_default='TRUE', nullable=False)
     created_at = Column(TIMESTAMP(timezone=True), server_default=text('now()'), nullable=False)
-    updated_at = Column(TIMESTAMP(timezone=True), server_default=text('now()'), nullable=False)
