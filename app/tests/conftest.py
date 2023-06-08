@@ -5,7 +5,8 @@ from app.security import create_access_token
 
 
 def pytest_configure():
-    return {'last_created_tweet_id': 0}
+    return {'last_created_tweet_id': 0,
+            'test_user_1_username': ''}
 
 
 @pytest.fixture
@@ -16,17 +17,17 @@ def client():
 @pytest.fixture
 def test_user_1(client):
     user_data = {
-        "username": "test_user_1",
-        "email": "test1@mail.com",
-        "phone_number": "004056787878",
-        "password": "g&H)F36ma-lfpd.sda",
-    },
+        "username": "test_user_1st",
+        "email": "test1st@mail.com",
+        "phone_number": "004056787899",
+        "password": "g&H)F36ma-lfpd.sd."
+    }
     res = client.post("/users/", json=user_data)
-
     assert res.status_code == 201
 
     user_1 = res.json()
     user_1['password'] = user_data['password']
+    pytest.test_user_1_username = user_1['username']
     return user_1
 
 
