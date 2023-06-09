@@ -6,12 +6,7 @@ TODO test_invalid_patching(user) Try changing username or email
 import pytest
 from fastapi import status
 import app.tests.users.user_cases as cases
-from app.security import create_access_token
-
-
-def create_header(username):
-    token = create_access_token({'sub': username})
-    return {"Authorization": "Bearer %s" % token}
+from app.tests.conftest import create_header
 
 
 @pytest.mark.parametrize("user", cases.users)

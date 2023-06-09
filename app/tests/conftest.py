@@ -4,9 +4,9 @@ from app.main import app
 from app.security import create_access_token
 
 
-def pytest_configure():
-    return {'last_created_tweet_id': 0,
-            'test_user_1_username': ''}
+def create_header(username):
+    token = create_access_token({'sub': username})
+    return {"Authorization": "Bearer %s" % token}   
 
 
 @pytest.fixture

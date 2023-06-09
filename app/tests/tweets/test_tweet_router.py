@@ -3,12 +3,7 @@ from fastapi import status
 import app.tests.tweets.tweet_cases as cases
 from app.security import create_access_token
 from app.schemas import TweetReturn
-from lorem_text import lorem
-
-
-def create_header(username):
-    token = create_access_token({'sub': username})
-    return {"Authorization": "Bearer %s" % token}   
+from app.tests.conftest import create_header
 
 
 def test_init(test_user_1):
