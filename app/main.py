@@ -1,6 +1,6 @@
 """Starting point and sub-paths are defined here"""
 from fastapi import FastAPI
-from app.routers import users, login, tweets, likes, comments
+from app.routers import users, login, tweets, likes, comments, follows
 
 app = FastAPI()
 app.include_router(users.router)
