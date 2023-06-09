@@ -1,46 +1,42 @@
 from fastapi.testclient import TestClient
+from fastapi import status
 import pytest
 from app.main import app
 from app.security import create_access_token
+from app.tests.user_cases import users
 
 
-def pytest_configure():
-    return {'last_created_tweet_id': 0,
-            'test_user_1_username': ''}
+client = TestClient(app)
 
 
-@pytest.fixture
-def client():
-    yield TestClient(app)
+@pytest.fixture(params=users, name="user")
+def temp_user(request):
+    """
+    Creates a temp user before a test that uses this 
+    fixture and when the test ends, the user
+    gets deleted.
+    """
+    # Setup
+    token = user_setup(user:=request.param)
+    client.headers["Authorization"] = "Bearer %s" % token
+
+    yield user
+
+    # Teardown:
+    response = client.delete("/users/")
+    assert response.status_code == status.HTTP_204_NO_CONTENT, "User deletion failed!"
+
+
+def user_setup(user: dict) -> str:
+    """
+    Given a user dict, creates the user entry in the database
+    using the corresponding endpoint and returns an access token.
+    """
+    response = client.post("/users/", json=user)
+    assert response.status_code == status.HTTP_201_CREATED, "User creation failed!"
+
+    token = create_access_token(
+        {'sub': user["username"]}
+        )
+    return token
     
-    
-@pytest.fixture
-def test_user_1(client):
-    user_data = {
-        "username": "test_user_1st",
-        "email": "test1st@mail.com",
-        "phone_number": "004056787899",
-        "password": "g&H)F36ma-lfpd.sd."
-    }
-    res = client.post("/users/", json=user_data)
-    assert res.status_code == 201
-
-    user_1 = res.json()
-    user_1['password'] = user_data['password']
-    pytest.test_user_1_username = user_1['username']
-    return user_1
-
-
-@pytest.fixture
-def token(test_user_1):
-    return create_access_token({"user_id": test_user_1['id']})
-
-
-@pytest.fixture
-def authorized_client(client, token):
-    client.headers = {
-        **client.headers,
-        "Authorization": f"Bearer {token}"
-    }
-
-    return client
