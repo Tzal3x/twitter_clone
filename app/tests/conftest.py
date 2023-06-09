@@ -1,9 +1,11 @@
+import json
 from fastapi.testclient import TestClient
 from fastapi import status
 import pytest
 from app.main import app
 from app.security import create_access_token
 from app.tests.user_cases import users
+from app.tests.tweets.tweet_cases import tweets
 
 
 client = TestClient(app)
@@ -39,4 +41,18 @@ def user_setup(user: dict) -> str:
         {'sub': user["username"]}
         )
     return token
-    
+
+
+# FIXME: user fixture is not seen by this one!
+@pytest.mark.usefixtures("user")
+@pytest.fixture(params=tweets, name="tweet")
+def temp_tweet(request):
+    tweet = request.param
+    response = client.post("tweets/", json=tweet)
+    assert response.status_code == status.HTTP_201_CREATED
+
+    tweet = json.loads(response.content.decode('utf-8'))
+    yield tweet
+
+    response = client.delete(f"tweets/{tweet['id']}")
+    assert response.status_code == status.HTTP_204_NO_CONTENT
