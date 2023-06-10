@@ -1,46 +1,92 @@
+"""
+This is a special module that gets detected
+by pytest and automatically imports the fixtures
+to the other test suites. 
+
+We also define test configurations were needed. 
+"""
+import json
 from fastapi.testclient import TestClient
+from fastapi import status
 import pytest
 from app.main import app
 from app.security import create_access_token
+from app.tests.cases.user_cases import users
+from app.tests.cases.tweet_cases import tweets
 
 
-def pytest_configure():
-    return {'last_created_tweet_id': 0,
-            'test_user_1_username': ''}
+client = TestClient(app)
+
+
+@pytest.fixture(params=users, name="user")
+def temp_user(request):
+    """
+    Creates a temp user before a test that uses this 
+    fixture and when the test ends, the user
+    gets deleted.
+    """
+    # Setup
+    token = user_setup(user:=request.param)
+    client.headers["Authorization"] = f"Bearer {token}"
+
+    yield user
+
+    # Teardown:
+    response = client.delete("/users/")
+    assert response.status_code == status.HTTP_204_NO_CONTENT, "User deletion failed!"
+
+
+def user_setup(user: dict) -> str:
+    """
+    Given a user dict, creates the user entry in the database
+    using the corresponding endpoint and returns an access token.
+    """
+    response = client.post("/users/", json=user)
+    assert response.status_code == status.HTTP_201_CREATED, "User creation failed!"
+
+    token = create_access_token(
+        {'sub': user["username"]}
+        )
+    return token
+
+
+@pytest.fixture(params=tweets, name="tweet")
+def temp_tweet(request):
+    """
+    Creates a temp tweet -for each tweet in the fixture params-
+    before a test that uses this fixture and when the test ends,
+    the user gets deleted.
+
+    It should be used together with the temp_user fixture on tests.
+    """
+    tweet = request.param
+    response = client.post("tweets/", json=tweet)
+    assert response.status_code == status.HTTP_201_CREATED
+
+    tweet = json.loads(response.content.decode('utf-8'))
+    yield tweet
+
+    response = client.delete(f"tweets/{tweet['id']}")
+    assert response.status_code == status.HTTP_204_NO_CONTENT, "Failed to delete tweet!"
 
 
 @pytest.fixture
-def client():
-    yield TestClient(app)
-    
-    
-@pytest.fixture
-def test_user_1(client):
-    user_data = {
-        "username": "test_user_1st",
-        "email": "test1st@mail.com",
-        "phone_number": "004056787899",
-        "password": "g&H)F36ma-lfpd.sd."
-    }
-    res = client.post("/users/", json=user_data)
-    assert res.status_code == 201
+def multiple_temp_tweets():
+    """
+    Creates multiple tweets so that a user can have many at once.
+    Then when the test ends, the tweets get deleted (teardown step). 
+    """
+    created_tweets = []
+    for tweet in tweets:
+        response = client.post("tweets/", json=tweet)
+        assert response.status_code == status.HTTP_201_CREATED
+        created_tweet = json.loads(response.content.decode('utf-8'))
+        created_tweets.append(created_tweet)
 
-    user_1 = res.json()
-    user_1['password'] = user_data['password']
-    pytest.test_user_1_username = user_1['username']
-    return user_1
+    yield created_tweets
 
-
-@pytest.fixture
-def token(test_user_1):
-    return create_access_token({"user_id": test_user_1['id']})
-
-
-@pytest.fixture
-def authorized_client(client, token):
-    client.headers = {
-        **client.headers,
-        "Authorization": f"Bearer {token}"
-    }
-
-    return client
+    # Teardown
+    for created_tweet in created_tweets:
+        tweet_id = created_tweet["id"]
+        response = client.delete(f"tweets/{tweet_id}")
+        assert response.status_code == status.HTTP_204_NO_CONTENT, "Failed to delete tweet!"
