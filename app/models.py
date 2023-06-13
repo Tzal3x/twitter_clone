@@ -1,11 +1,11 @@
 """SQL Alchemy (ORM) & Alembic (Migration Tool)"""
-from datetime import datetime
 
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql.sqltypes import TIMESTAMP
 from sqlalchemy.sql.expression import text
 from sqlalchemy import (
-    Column, ForeignKey, Unicode, UnicodeText, Integer, String, DateTime, Boolean,
+    Column, ForeignKey, Unicode, UnicodeText,
+    Integer, String, DateTime, Boolean,
     )
 from app.database import Base
 
@@ -22,8 +22,10 @@ class Users(Base):
     phone_number = Column(String(15), nullable=False)
     bio = Column(Unicode(160))
     is_active = Column(Boolean, server_default='TRUE', nullable=False)
-    created_at = Column(TIMESTAMP(timezone=True), server_default=text('now()'), nullable=False)
-    updated_at = Column(TIMESTAMP(timezone=True), server_default=text('now()'), nullable=False)
+    created_at = Column(TIMESTAMP(timezone=True), server_default=text('now()'),
+                        nullable=False)
+    updated_at = Column(TIMESTAMP(timezone=True), server_default=text('now()'),
+                        nullable=False)
     password = Column(String, nullable=False)
 
     tweets = relationship("Tweets", back_populates="user")
@@ -38,8 +40,10 @@ class Tweets(Base):
     body = Column(UnicodeText, nullable=False)
     user_id = Column(Integer, ForeignKey('users.id'))
     is_active = Column(Boolean, server_default='TRUE', nullable=False)
-    created_at = Column(TIMESTAMP(timezone=True), server_default=text('now()'), nullable=False)
-    updated_at = Column(TIMESTAMP(timezone=True), server_default=text('now()'), nullable=False)
+    created_at = Column(TIMESTAMP(timezone=True), server_default=text('now()'),
+                        nullable=False)
+    updated_at = Column(TIMESTAMP(timezone=True), server_default=text('now()'),
+                        nullable=False)
     
     user = relationship("Users", back_populates="tweets")
     comments = relationship("Comments", back_populates="tweet")
@@ -67,8 +71,10 @@ class TweetLikes(Base):
     user_id = Column(Integer, ForeignKey('users.id'), primary_key=True)
     tweet_id = Column(Integer, ForeignKey('tweets.id'), primary_key=True)
     is_active = Column(Boolean, server_default='TRUE', nullable=False)
-    created_at = Column(TIMESTAMP(timezone=True), server_default=text('now()'), nullable=False)
-    updated_at = Column(TIMESTAMP(timezone=True), server_default=text('now()'), nullable=False)
+    created_at = Column(TIMESTAMP(timezone=True), server_default=text('now()'),
+                        nullable=False)
+    updated_at = Column(TIMESTAMP(timezone=True), server_default=text('now()'),
+                        nullable=False)
      
 
 class CommentLikes(Base):
@@ -77,8 +83,10 @@ class CommentLikes(Base):
     user_id = Column(Integer, ForeignKey('users.id'), primary_key=True)
     comment_id = Column(Integer, ForeignKey('comments.id'), primary_key=True)
     is_active = Column(Boolean, server_default='TRUE', nullable=False)
-    created_at = Column(TIMESTAMP(timezone=True), server_default=text('now()'), nullable=False)
-    updated_at = Column(TIMESTAMP(timezone=True), server_default=text('now()'), nullable=False)
+    created_at = Column(TIMESTAMP(timezone=True), server_default=text('now()'),
+                        nullable=False)
+    updated_at = Column(TIMESTAMP(timezone=True), server_default=text('now()'),
+                        nullable=False)
 
 
 class Follows(Base):
@@ -87,4 +95,5 @@ class Follows(Base):
     
     follower_id = Column(Integer, ForeignKey('users.id'), primary_key=True)
     followee_id = Column(Integer, ForeignKey('users.id'), primary_key=True)
-    created_at = Column(TIMESTAMP(timezone=True), server_default=text('now()'), nullable=False)
+    created_at = Column(TIMESTAMP(timezone=True), server_default=text('now()'),
+                        nullable=False)

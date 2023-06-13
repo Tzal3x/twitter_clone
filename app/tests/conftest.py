@@ -1,14 +1,15 @@
 """
 This is a special module that gets detected
 by pytest and automatically imports the fixtures
-to the other test suites. 
+to the other test suites.
 
-We also define test configurations were needed. 
+We also define test configurations were needed.
 """
-import json
+import random
+from lorem_text import lorem
+import pytest
 from fastapi.testclient import TestClient
 from fastapi import status
-import pytest
 from app.main import app
 from app.security import create_access_token
 from app.tests.cases.user_cases import users
@@ -18,22 +19,24 @@ from app.tests.cases.tweet_cases import tweets
 client = TestClient(app)
 
 
-@pytest.fixture(params=users, name="user")
+@pytest.fixture(params=users, name="user", autouse=True)
+# autouse=True means that this fixture is triggered for every test by default
 def temp_user(request):
     """
-    Creates a temp user before a test that uses this 
+    Creates a temp user before a test that uses this
     fixture and when the test ends, the user
     gets deleted.
     """
     # Setup
-    token = user_setup(user:=request.param)
+    token = user_setup(user := request.param)
     client.headers["Authorization"] = f"Bearer {token}"
 
     yield user
 
     # Teardown:
     response = client.delete("/users/")
-    assert response.status_code == status.HTTP_204_NO_CONTENT, "User deletion failed!"
+    assert response.status_code == status.HTTP_204_NO_CONTENT, """
+    User deletion failed!"""
 
 
 def user_setup(user: dict) -> str:
@@ -42,7 +45,8 @@ def user_setup(user: dict) -> str:
     using the corresponding endpoint and returns an access token.
     """
     response = client.post("/users/", json=user)
-    assert response.status_code == status.HTTP_201_CREATED, "User creation failed!"
+    assert response.status_code == status.HTTP_201_CREATED, """
+    User creation failed!"""
 
     token = create_access_token(
         {'sub': user["username"]}
@@ -63,24 +67,48 @@ def temp_tweet(request):
     response = client.post("tweets/", json=tweet)
     assert response.status_code == status.HTTP_201_CREATED
 
-    tweet = json.loads(response.content.decode('utf-8'))
+    tweet = response.json()
     yield tweet
 
     response = client.delete(f"tweets/{tweet['id']}")
-    assert response.status_code == status.HTTP_204_NO_CONTENT, "Failed to delete tweet!"
+    assert response.status_code == status.HTTP_204_NO_CONTENT, """
+    Failed to delete tweet!"""
+    
+    
+@pytest.fixture(params=tweets)
+def persistent_tweet(request):
+    """
+    Similar to temp_tweet fixture, but after the test ends, the tweets
+    remain in the db as records, so we need to delete them explicitly.
+    """
+    tweet = request.param
+    response = client.post("tweets/", json=tweet)
+    assert response.status_code == status.HTTP_201_CREATED
+
+    tweet = response.json()
+    return tweet
 
 
 @pytest.fixture
 def multiple_temp_tweets():
     """
     Creates multiple tweets so that a user can have many at once.
-    Then when the test ends, the tweets get deleted (teardown step). 
+    Then when the test ends, the tweets get deleted (teardown step).
     """
     created_tweets = []
-    for tweet in tweets:
+    random_generated_tweets = []
+    # Use lorem_text module to create a set of random generated, dummy tweets
+    for _ in range(random.randint(1, 11)):
+        random_generated_tweets.append({
+            "title": lorem.words(5),
+            "body": lorem.paragraph()
+        })
+    for tweet in random_generated_tweets:
         response = client.post("tweets/", json=tweet)
         assert response.status_code == status.HTTP_201_CREATED
-        created_tweet = json.loads(response.content.decode('utf-8'))
+        created_tweet = response.json()
+        assert created_tweet['title'] == tweet['title']
+        assert created_tweet['body'] == tweet['body']
         created_tweets.append(created_tweet)
 
     yield created_tweets
@@ -89,4 +117,5 @@ def multiple_temp_tweets():
     for created_tweet in created_tweets:
         tweet_id = created_tweet["id"]
         response = client.delete(f"tweets/{tweet_id}")
-        assert response.status_code == status.HTTP_204_NO_CONTENT, "Failed to delete tweet!"
+        assert response.status_code == status.HTTP_204_NO_CONTENT, """
+        Failed to delete tweet!"""
