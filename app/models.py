@@ -3,7 +3,7 @@ import re
 from sqlalchemy.orm import relationship, validates
 from sqlalchemy.sql.sqltypes import TIMESTAMP
 from sqlalchemy.sql.expression import text
-from sqlalchemy import (
+from sqlalchemy import  (
     Column, ForeignKey, Unicode,
     Integer, String, DateTime,
     )
