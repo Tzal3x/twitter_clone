@@ -3,13 +3,14 @@ import re
 from sqlalchemy.orm import relationship, validates
 from sqlalchemy.sql.sqltypes import TIMESTAMP
 from sqlalchemy.sql.expression import text
-from sqlalchemy import  (
+from sqlalchemy import (
     Column, ForeignKey, Unicode,
     Integer, String, DateTime,
     )
 from sqlalchemy_utils import EmailType
 from app.database import Base
 import phonenumbers
+
 
 class Users(Base):
     __tablename__ = 'users'
@@ -166,7 +167,6 @@ class Validator:
             )
             raise ValueError(error_msg)
         return password
-
 
     @staticmethod
     def is_phone_number(phone_number) -> str:

@@ -18,25 +18,31 @@ depends_on = None
 
 def upgrade() -> None:
     op.create_table('tweet_likes',
-    sa.Column('user_id', sa.Integer(), nullable=False),
-    sa.Column('tweet_id', sa.Integer(), nullable=False),
-    sa.Column('is_active', sa.Boolean(), server_default='TRUE', nullable=False),
-    sa.Column('created_at', sa.TIMESTAMP(timezone=True), server_default=sa.text('now()'), nullable=False),
-    sa.Column('updated_at', sa.TIMESTAMP(timezone=True), server_default=sa.text('now()'), nullable=False),
-    sa.ForeignKeyConstraint(['tweet_id'], ['tweets.id'], ),
-    sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
-    sa.PrimaryKeyConstraint('user_id', 'tweet_id')
-    )
+                    sa.Column('user_id', sa.Integer(), nullable=False),
+                    sa.Column('tweet_id', sa.Integer(), nullable=False),
+                    sa.Column('is_active', sa.Boolean(),
+                              server_default='TRUE', nullable=False),
+                    sa.Column('created_at', sa.TIMESTAMP(timezone=True),
+                              server_default=sa.text('now()'), nullable=False),
+                    sa.Column('updated_at', sa.TIMESTAMP(timezone=True),
+                              server_default=sa.text('now()'), nullable=False),
+                    sa.ForeignKeyConstraint(['tweet_id'], ['tweets.id'], ),
+                    sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
+                    sa.PrimaryKeyConstraint('user_id', 'tweet_id')
+                    )
     op.create_table('comment_likes',
-    sa.Column('user_id', sa.Integer(), nullable=False),
-    sa.Column('comment_id', sa.Integer(), nullable=False),
-    sa.Column('is_active', sa.Boolean(), server_default='TRUE', nullable=False),
-    sa.Column('created_at', sa.TIMESTAMP(timezone=True), server_default=sa.text('now()'), nullable=False),
-    sa.Column('updated_at', sa.TIMESTAMP(timezone=True), server_default=sa.text('now()'), nullable=False),
-    sa.ForeignKeyConstraint(['comment_id'], ['comments.id'], ),
-    sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
-    sa.PrimaryKeyConstraint('user_id', 'comment_id')
-    )
+                    sa.Column('user_id', sa.Integer(), nullable=False),
+                    sa.Column('comment_id', sa.Integer(), nullable=False),
+                    sa.Column('is_active', sa.Boolean(),
+                              server_default='TRUE', nullable=False),
+                    sa.Column('created_at', sa.TIMESTAMP(timezone=True),
+                              server_default=sa.text('now()'), nullable=False),
+                    sa.Column('updated_at', sa.TIMESTAMP(timezone=True),
+                              server_default=sa.text('now()'), nullable=False),
+                    sa.ForeignKeyConstraint(['comment_id'], ['comments.id'], ),
+                    sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
+                    sa.PrimaryKeyConstraint('user_id', 'comment_id')
+                    )
 
 
 def downgrade() -> None:
