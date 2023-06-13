@@ -3,12 +3,10 @@ TODO test_create_invalid_users(invalid_user)
 TODO test_invalid_patching(user) Try changing username or email
 """
 
-import pytest
 from fastapi import status
 from app.tests.conftest import client
 
 
-@pytest.mark.usefixtures("user")
 def test_create_and_delete_user():
     """
     Using the "user" fixture, for each user case
@@ -16,7 +14,6 @@ def test_create_and_delete_user():
     """
 
 
-@pytest.mark.usefixtures("user")
 def test_get_current():
     """
     Create user, test get user, delete user.
@@ -29,11 +26,10 @@ def test_get_specific_user(user):
     """
     Create user, test get specific user, delete user.
     """
-    response = client.get("users/?username=%s" % user["username"])
+    response = client.get(f"users/?username={user['username']}")
     assert response.status_code == status.HTTP_200_OK
 
 
-@pytest.mark.usefixtures("user")
 def test_update_current_user_info():
     """
     Create user, test update current user, delete user.
