@@ -22,7 +22,7 @@ class Users(Base):
     last_name = Column(Unicode(40))
     birth = Column(DateTime, nullable=False)
     email = Column(EmailType, nullable=False, unique=True)
-    phone_number = Column(String(15), nullable=False, unique=True)
+    phone_number = Column(String(15), unique=True)
     bio = Column(Unicode(250))
     created_at = Column(TIMESTAMP(timezone=True),
                         server_default=text('NOW()'), nullable=False)
@@ -33,17 +33,17 @@ class Users(Base):
     comments = relationship("Comments", back_populates="user")
 
     @validates('username')
-    def validate_username(self, username):
-        Validator.min_length(username, 4)
+    def validate_username(self, _key, username):
+        return Validator.min_length(username, 4)
 
     @validates('password')
-    def validate_password(self, password):
+    def validate_password(self, _key, password):
         Validator.min_length(password, 4)
-        Validator.is_strong(password)
+        return Validator.is_strong(password)
 
     @validates('phone_number')
-    def validate_phone_number(self, phone_number):
-        Validator.is_phone_number(phone_number)
+    def validate_phone_number(self, _key, phone_number):
+        return Validator.is_phone_number(phone_number)
 
 
 class Tweets(Base):

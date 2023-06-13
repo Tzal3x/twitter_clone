@@ -33,12 +33,8 @@ class UserCreate(UserBase):
 
 class UserReturn(UserBase):
     id: int
-    is_active: bool
     created_at: datetime
     updated_at: datetime
-
-    # TODO: tweets: List[Tweets]
-    # TODO: comments: List[Comments]
 
     class Config:
         orm_mode = True

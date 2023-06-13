@@ -16,7 +16,8 @@ router = APIRouter(
 )
 
 
-@router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.UserReturn)
+@router.post("/", status_code=status.HTTP_201_CREATED,
+             response_model=schemas.UserReturn)
 def create_user(user: schemas.UserCreate, 
                 db: Session = Depends(get_db),
                 ) -> schemas.UserReturn:
@@ -28,7 +29,8 @@ def create_user(user: schemas.UserCreate,
         db.add(db_user)
         db.commit()
         db.refresh(db_user)
-    except exc.IntegrityError:
+    except exc.IntegrityError as e:
+        print(e)
         db.rollback()
         raise HTTPException(status_code=status.HTTP_409_CONFLICT,
                             detail="Username, email or phone number already exist.")
@@ -47,7 +49,8 @@ def get_specific_user(username: Annotated[str, Query],
     user = Queries.get_user(db, username)
     print(user)
     if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User was not found.")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail="User was not found.")
     return user
 
 
@@ -56,9 +59,8 @@ def get_specific_user(username: Annotated[str, Query],
 def update_current_user_info(
     update_user: Annotated[schemas.UserUpdate, Body],
     user: Annotated[Users, Depends(authorize_user)],
-    db: Session = Depends(get_db), 
+    db: Session = Depends(get_db),
     ):
-
     update_data = update_user.dict(exclude_unset=True)
     try:
         db.query(Users).filter(Users.username == user.username).update(update_data)
@@ -79,5 +81,5 @@ def delete_current_account(
         db.commit()
     except exc.SQLAlchemyError:
         db.rollback()
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
-                            detail="Could not delete user.") 
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                            detail="Could not delete user.")

@@ -5,7 +5,7 @@ users = [
         "last_name": "Doe",
         "birth": "1970-01-01",
         "email": "johndoe.avblr1751@mail.com",
-        "phone_number": "003045454545",
+        "phone_number": "+306933395612", 
         "password": "f*G(E14pa-osd.sda",
         "bio": "Just an ordinary person trying to navigate the complexities of life."
     },
@@ -13,9 +13,9 @@ users = [
         "username": "test_user_2",
         # "first_name": "Emma",
         # "last_name": "Johnson",
-        # "birth": "1985-04-15",
+        "birth": "1985-04-15",
         "email": "emma.johnson543@mail.com",
-        "phone_number": "004056787878",
+        "phone_number": "+306940115079",
         "password": "g&H)F36ma-lfpd.sda",
         # "bio": "Professional pizza eater and cat enthusiast."
     },
@@ -25,7 +25,7 @@ users = [
         # "last_name": "Smith",
         "birth": "1992-07-22",
         "email": "michael.smith456@mail.com",
-        "phone_number": "005067895643",
+        "phone_number": "+306911195612",
         "password": "p@L(W19sm-oida.wap",
         "bio": "Lover of all things chocolate and a part-time superhero in training."
     },
@@ -35,7 +35,7 @@ users = [
         "last_name": "Williams",
         "birth": "1988-12-05",
         "email": "sophia.williams123@mail.com",
-        "phone_number": "004056712345",
+        "phone_number": "+306933399999",
         "password": "k#S)D56wp-akoi.sda",
         # "bio": "Professional ice cream taster and expert daydreamer."
     },
@@ -45,19 +45,19 @@ users = [
         "last_name": "Brown",
         "birth": "1978-09-18",
         "email": "daniel.brown456@mail.com",
-        "phone_number": "003046789012",
+        "phone_number": "+306969395612",
         "password": "a@M)F23br-olid.sda",
         "bio": "Adventurer, coffee lover, and occasional skydiver."
     },
     {
         "username": "test_user_6",
-        "first_name": "Olivia",
-        "last_name": "Taylor",
-        # "birth": "1995-03-25",
+        # "first_name": "Olivia",
+        # "last_name": "Taylor",
+        "birth": "1995-03-25",
         "email": "olivia.taylor789@mail.com",
-        "phone_number": "004056743210",
+        "phone_number": "+306933395612",
         "password": "h&L)D49ta-rfwl.sda",
-        "bio": "Bookworm, travel enthusiast, and professional napper."
+        # "bio": "Bookworm, travel enthusiast, and professional napper."
     }
 ]
 
@@ -72,20 +72,21 @@ invalid_create_users = [
         "first_name": "David",
         "last_name": "Anderson",
         "birth": "1983-06-12",
-        "email": "david.anderson234d.com", # Not an email
+        "email": "david.anderson234d.com",  # Not an email
         "phone_number": "003047896543",
         "password": "",  # EMPTY Password/too short
         "bio": "Full-time pizza delivery guy and part-time ninja warrior."
     },
     {
-        # "username": "invalid_test_user_2",  # NO USERNAME 
+        # "username": "invalid_test_user_2",  # NO USERNAME
         "first_name": "Sophie",
         "last_name": "Martin",
         "birth": "1990-11-30",
         # "email": "sophie.martin789@mail.com",  # NO EMAIL
         # "phone_number": "004056798765",  # NO PHONE NUMBER
         # "password": "o&T)F56ma-pfsd.sda",  # NO PASSWORD
-        "bio": "Coffee addict, music lover, and aspiring unicorn tamer." * 10  # TOO LONG BIO
+        "bio": ("Coffee addict, music lover,"
+                "and aspiring unicorn tamer.") * 10  # TOO LONG BIO
     },
     {
         # "username": "invalid_test_user_1",

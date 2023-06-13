@@ -26,14 +26,15 @@ def temp_user(request):
     gets deleted.
     """
     # Setup
-    token = user_setup(user:=request.param)
+    token = user_setup(user := request.param)
     client.headers["Authorization"] = f"Bearer {token}"
 
     yield user
 
     # Teardown:
     response = client.delete("/users/")
-    assert response.status_code == status.HTTP_204_NO_CONTENT, "User deletion failed!"
+    assert response.status_code == status.HTTP_204_NO_CONTENT, \
+        f"User deletion failed! {response.content}"
 
 
 def user_setup(user: dict) -> str:
