@@ -1,6 +1,6 @@
-import re
 from datetime import datetime, date
 from pydantic import BaseModel, EmailStr, validator
+from app.helpers import Validator
 
 
 class Token(BaseModel):
@@ -33,35 +33,15 @@ class UserCreate(UserBase):
 
     @validator('password')
     def is_strong(cls, password: str):
-        """
-        Verify the strength of 'password'
-        """
-        min_password_len = 8
-        length_error = (
-            len(password) < min_password_len,
-            f"Needs at least {min_password_len} characters! "
-            f"Current: {len(password)}."
-            )
-        digit_error = (re.search(r"\d", password) is None,
-                       "Use at least 1 digit.")
+        return Validator.is_strong(password)
 
-        uppercase_error = (re.search(r"[A-Z]", password) is None,
-                           "Use at least 1 uppercase letter.")
+    @validator('username')
+    def validate_username(cls, username):
+        return Validator.min_length(username, 4)
 
-        lowercase_error = (re.search(r"[a-z]", password) is None,
-                           "Use at least 1 lowercase letter.")
-
-        regex = r"[ !#$%&'()*+,-./[\\\]^_`{|}~"+r'"]'
-        symbol_error = (re.search(regex, password) is None,
-                        "Use at least 1 symbol.")
-
-        errors = (length_error, digit_error,
-                  uppercase_error, lowercase_error,
-                  symbol_error)
-        for error in errors:
-            if error[0]:
-                raise ValueError(f"Password is not strong enough: {error[1]}")
-        return password
+    @validator('phone_number')
+    def validate_phone_number(cls, phone_number):
+        return Validator.is_phone_number(phone_number)
 
 
 class UserReturn(UserBase):

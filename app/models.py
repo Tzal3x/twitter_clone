@@ -1,6 +1,5 @@
 """SQL Alchemy (ORM) & Alembic (Migration Tool)"""
-import phonenumbers
-from sqlalchemy.orm import relationship, validates
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql.sqltypes import TIMESTAMP
 from sqlalchemy.sql.expression import text
 from sqlalchemy import (
@@ -30,14 +29,6 @@ class Users(Base):
 
     tweets = relationship("Tweets", back_populates="user")
     comments = relationship("Comments", back_populates="user")
-
-    @validates('username')
-    def validate_username(self, _key, username):
-        return Validator.min_length(username, 4)
-
-    @validates('phone_number')
-    def validate_phone_number(self, _key, phone_number):
-        return Validator.is_phone_number(phone_number)
 
 
 class Tweets(Base):
@@ -116,28 +107,3 @@ class Follows(Base):
     created_at = Column(TIMESTAMP(timezone=True),
                         server_default=text('NOW()'), nullable=False)
 # endregion
-
-
-class Validator:
-    """
-    Helper class that validates field constraints.
-    """
-    @staticmethod
-    def min_length(column_field: str, length: int) -> str:
-        """
-        Checks if a string field
-        """
-        if len(column_field) < length:
-            error_msg = (
-                f"{column_field} is too short! "
-                f"Must be at least >= {length}."
-            )
-            raise ValueError(error_msg)
-        return column_field
-
-    @staticmethod
-    def is_phone_number(phone_number) -> str:
-        pn = phonenumbers.parse(phone_number, None)
-        if not phonenumbers.is_valid_number(pn):
-            raise ValueError("Not a valid phone number.")
-        return phone_number

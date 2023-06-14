@@ -24,16 +24,11 @@ router = APIRouter(
              response_model=schemas.UserReturn)
 def create_user(user: schemas.UserCreate,
                 db: Session = Depends(get_db),
-                ) -> schemas.UserReturn:   
+                ) -> schemas.UserReturn:
     hashed_password = get_password_hash(user.password)
     user_body = user.dict()
     user_body["password"] = hashed_password
-
-    try:
-        db_user = Users(**user_body)
-    except ValueError as err:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                            detail=str(err))
+    db_user = Users(**user_body)
     try:
         db.add(db_user)
         db.commit()
