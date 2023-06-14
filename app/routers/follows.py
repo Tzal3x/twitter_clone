@@ -13,7 +13,6 @@ from app.queries import Queries
 from app.schemas import FollowersReturn, FollowingReturn
 
 
-
 router = APIRouter(
     prefix="/follows",
     tags=["follows"],
@@ -28,8 +27,8 @@ def follow(username: Annotated[str, Query],
     """Command to follow a user"""
     followee: Users = Queries.get_user(db, username)
     new_follow_entry = Follows(
-            follower_id = user.id,
-            followee_id = followee.id
+            follower_id=user.id,
+            followee_id=followee.id
         )
     try:
         db.add(new_follow_entry)
@@ -46,9 +45,9 @@ def unfollow(username: Annotated[str, Query],
     """Unfollow user"""
     followee: Users = Queries.get_user(db, username)
     rows_deleted: int = db.query(Follows)\
-                            .filter(Follows.follower_id == int(user.id),
-                                    Follows.followee_id == int(followee.id))\
-                            .delete()
+                          .filter(Follows.follower_id == int(user.id),
+                                  Follows.followee_id == int(followee.id))\
+                          .delete()
     if not rows_deleted:
         raise HTTPException(status_code=status.HTTP_410_GONE,
                             detail="Unfollowing was not possible.")
@@ -63,11 +62,11 @@ def get_followers(username: Annotated[str, Query],
     """Get the usernames of the followers of a user"""
     user: Users = Queries.get_user(db, username)
     query = db.query(Follows.follower_id, Users.username)\
-                            .filter(Follows.followee_id == user.id)\
-                            .join(Users, Users.id == Follows.follower_id)\
-                            .limit(limit)
+              .filter(Follows.followee_id == user.id)\
+              .join(Users, Users.id == Follows.follower_id)\
+              .limit(limit)
     followers = query.all()
-    usernames: list  = (username for _, username in followers)
+    usernames: list = (username for _, username in followers)
 
     return FollowersReturn(followers=usernames)
 
@@ -80,10 +79,10 @@ def get_following(username: Annotated[str, Query],
     """Get the usermames that a user follows"""
     user: Users = Queries.get_user(db, username)
     query = db.query(Follows.followee_id, Users.username)\
-                            .filter(Follows.follower_id == user.id)\
-                            .join(Users, Users.id == Follows.followee_id)\
-                            .limit(limit)
+              .filter(Follows.follower_id == user.id)\
+              .join(Users, Users.id == Follows.followee_id)\
+              .limit(limit)
     followees = query.all()
-    usernames: list  = (username for _, username in followees)
-    
+    usernames: list = (username for _, username in followees)
+
     return FollowingReturn(followees=usernames)

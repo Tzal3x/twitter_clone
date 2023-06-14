@@ -112,7 +112,7 @@ invalid_registration_users = [
         "last_name": "Clark",
         "birth": "3023-02-14",  # BIRTHDAY should not be in the future
         "email": "ava.clark567@mail.com",
-        "phone_number": "+303933395332123",
+        "phone_number": "+306969395612",
         "password": "e&R)K93cl-ahdf.sda",
         "bio": "Serial binge-watcher and champion of sleeping in on weekends."
     },
