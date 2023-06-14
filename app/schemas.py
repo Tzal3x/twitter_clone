@@ -1,5 +1,6 @@
+import re
 from datetime import datetime, date
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, validator
 
 
 class Token(BaseModel):
@@ -29,6 +30,38 @@ class UserUpdate(BaseModel):
 
 class UserCreate(UserBase):
     password: str
+
+    @validator('password')
+    def is_strong(cls, password: str):
+        """
+        Verify the strength of 'password'
+        """
+        min_password_len = 8
+        length_error = (
+            len(password) < min_password_len,
+            f"Needs at least {min_password_len} characters! "
+            f"Current: {len(password)}."
+            )
+        digit_error = (re.search(r"\d", password) is None,
+                       "Use at least 1 digit.")
+
+        uppercase_error = (re.search(r"[A-Z]", password) is None,
+                           "Use at least 1 uppercase letter.")
+
+        lowercase_error = (re.search(r"[a-z]", password) is None,
+                           "Use at least 1 lowercase letter.")
+
+        regex = r"[ !#$%&'()*+,-./[\\\]^_`{|}~"+r'"]'
+        symbol_error = (re.search(regex, password) is None,
+                        "Use at least 1 symbol.")
+
+        errors = (length_error, digit_error,
+                  uppercase_error, lowercase_error,
+                  symbol_error)
+        for error in errors:
+            if error[0]:
+                raise ValueError(f"Password is not strong enough: {error[1]}")
+        return password
 
 
 class UserReturn(UserBase):
