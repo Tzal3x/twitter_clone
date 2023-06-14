@@ -54,7 +54,10 @@ class Validator:
 
     @staticmethod
     def is_phone_number(phone_number) -> str:
-        pn = phonenumbers.parse(phone_number, None)
+        try:
+            pn = phonenumbers.parse(phone_number, None)
+        except phonenumbers.NumberParseException as e:
+            raise ValueError(f"Not a valid phone number: {str(e)}")
         if not phonenumbers.is_valid_number(pn):
             raise ValueError("Not a valid phone number.")
         return phone_number

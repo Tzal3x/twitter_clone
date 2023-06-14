@@ -64,10 +64,10 @@ users = [
 
 """
 Those users are not supposed to become database entries.
-They are supposed to fail on purpose on the creation step.
+They are supposed to fail on purpose on the creation step,
+because they have invalid or missing fields that are required.
 """
-# region Invalid users
-invalid_users_validator_fail = [
+invalid_registration_users = [
     {
         "username": "s",
         "birth": "1983-06-12",
@@ -89,9 +89,6 @@ invalid_users_validator_fail = [
         "phone_number": "+300003933395332",
         "password": "h"
     },
-]
-
-invalid_users_conflicts = [
     {
         "username": "invalid_test_user",
         "birth": "1983-06-12",
@@ -105,18 +102,18 @@ invalid_users_conflicts = [
         "last_name": "Walker",
         "birth": "1975-08-08",
         "email": "jameswalker321mail.com",  # NOT a valid email
-        "phone_number": "003045671234",
+        "phone_number": "+003045671234",
         "password": "u&J)H28wa-omds.sda",
         "bio": "Professional procrastinator and master of witty comebacks."
     },
     {
-        "username": "invalid_test_user",
+        "username": "future_birthday",
         "first_name": "Ava",
         "last_name": "Clark",
         "birth": "3023-02-14",  # BIRTHDAY should not be in the future
         "email": "ava.clark567@mail.com",
-        "phone_number": "+303933395332123",  # HUGE PHONE NUMBER
-        "password": "e&R)K93cl-ahdf.sda" * 1000,  # TOO LONG STRING
+        "phone_number": "+303933395332123",
+        "password": "e&R)K93cl-ahdf.sda",
         "bio": "Serial binge-watcher and champion of sleeping in on weekends."
     },
     {
@@ -140,4 +137,3 @@ invalid_users_conflicts = [
         "bio": "Serial binge-watcher and champion of sleeping in on weekends."
     },
 ]
-# endregion
