@@ -2,7 +2,6 @@ from dotenv import dotenv_values
 from pathlib import Path
 
 
-
 def load_configs() -> dict:
     """
     Load configuration variables about the database etc.
@@ -28,5 +27,7 @@ def get_security_configs() -> dict[str]:
     return {
         "TOKEN_CREATION_SECRET_KEY": env_vars["TOKEN_CREATION_SECRET_KEY"],
         "HASH_ALGORITHM": env_vars["HASH_ALGORITHM"],
-        "ACCESS_TOKEN_EXPIRE_MINUTES": int(env_vars["ACCESS_TOKEN_EXPIRE_MINUTES"]),
+        "ACCESS_TOKEN_EXPIRE_MINUTES": int(
+            env_vars["ACCESS_TOKEN_EXPIRE_MINUTES"]
+        ),
     }
