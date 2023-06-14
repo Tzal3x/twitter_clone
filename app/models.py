@@ -38,7 +38,6 @@ class Users(Base):
 
     @validates('password')
     def validate_password(self, _key, password):
-        Validator.min_length(password, 4)
         return Validator.is_strong(password)
 
     @validates('phone_number')
