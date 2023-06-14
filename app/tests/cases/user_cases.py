@@ -62,50 +62,82 @@ users = [
 ]
 
 
-# TODO write tests so that the following users will fail to be created
-invalid_create_users = [
+"""
+Those users are not supposed to become database entries.
+They are supposed to fail on purpose on the creation step.
+"""
+# region Invalid users
+invalid_users_validator_fail = [
     {
-        # EMPTY-ON-PURPOSE
+        "username": "s",
+        "birth": "1983-06-12",
+        "email": "david@email.com",
+        "phone_number": "+303933395332",
+        "password": "h&L)D49ta-rfwl.sda"
     },
     {
-        "username": "invalid_test_user_1",
-        "first_name": "David",
-        "last_name": "Anderson",
+        "username": "weak_password",
+        "birth": "1983-06-12",
+        "email": "david@gmail.com",
+        "phone_number": "+306933395612",
+        "password": "h"
+    },
+    {
+        "username": "invalid_phone_number",
+        "birth": "1983-06-12",
+        "email": "david@gmail.com",
+        "phone_number": "+300003933395332",
+        "password": "h"
+    },
+]
+
+invalid_users_conflicts = [
+    {
+        "username": "invalid_test_user",
         "birth": "1983-06-12",
         "email": "david.anderson234d.com",  # Not an email
-        "phone_number": "003047896543",
-        "password": "",  # EMPTY Password/too short
-        "bio": "Full-time pizza delivery guy and part-time ninja warrior."
+        "phone_number": "+303933395332",
+        "password": "h&L)D49ta-rfwl.sda"
     },
     {
-        # "username": "invalid_test_user_2",  # NO USERNAME
-        "first_name": "Sophie",
-        "last_name": "Martin",
-        "birth": "1990-11-30",
-        # "email": "sophie.martin789@mail.com",  # NO EMAIL
-        # "phone_number": "004056798765",  # NO PHONE NUMBER
-        # "password": "o&T)F56ma-pfsd.sda",  # NO PASSWORD
-        "bio": ("Coffee addict, music lover,"
-                "and aspiring unicorn tamer.") * 10  # TOO LONG BIO
-    },
-    {
-        # "username": "invalid_test_user_1",
+        "username": "invalid_test_user",
         "first_name": "James",
         "last_name": "Walker",
         "birth": "1975-08-08",
-        "email": "jameswalker321mail.com",  # NOT AN EMAIL
+        "email": "jameswalker321mail.com",  # NOT a valid email
         "phone_number": "003045671234",
         "password": "u&J)H28wa-omds.sda",
         "bio": "Professional procrastinator and master of witty comebacks."
     },
     {
-        "username": "invalid_test_user_4",
-        "first_name": "Ava" * 100, # TOO LONG STRING
-        "last_name": "Clark", # TOO LONG STRING
+        "username": "invalid_test_user",
+        "first_name": "Ava",
+        "last_name": "Clark",
         "birth": "3023-02-14",  # BIRTHDAY should not be in the future
         "email": "ava.clark567@mail.com",
-        "phone_number": "004056765432004056765432004056765432",  # HUGE PHONE NUMBER
+        "phone_number": "+303933395332123",  # HUGE PHONE NUMBER
         "password": "e&R)K93cl-ahdf.sda" * 1000,  # TOO LONG STRING
         "bio": "Serial binge-watcher and champion of sleeping in on weekends."
     },
+    {
+        "username": "invalid_test_user",
+        "first_name": "Ava",
+        "last_name": "Clark",
+        "birth": "1980-02-14",
+        "email": "ava.clark567@mail.com",
+        "phone_number": "004056765432004056765432004056765432",  # HUGE PHONE NUMBER
+        "password": "e&R)K93cl-ahdf.sda",
+        "bio": "Serial binge-watcher and champion of sleeping in on weekends."
+    },
+    {
+        "username": "invalid_test_user",
+        "first_name": "Ava",
+        "last_name": "Clark",
+        "birth": "1998-02-14",
+        "email": "ava.clark567@mail.com",
+        "phone_number": "a000000000",  # Not a phone number
+        "password": "e&R)K93cl-ahdf.sda",
+        "bio": "Serial binge-watcher and champion of sleeping in on weekends."
+    },
 ]
+# endregion
