@@ -2,6 +2,7 @@ import re
 from dotenv import dotenv_values
 from pathlib import Path
 import phonenumbers
+from datetime import datetime
 
 
 def load_configs() -> dict:
@@ -93,3 +94,14 @@ class Validator:
             if error[0]:
                 raise ValueError(f"Password is not strong enough: {error[1]}")
         return password
+
+    @staticmethod
+    def date_not_in_future(date: str) -> str:
+        """
+        Verify the strength of 'password'
+        """
+        dt = datetime.strptime(date, "%Y-%m-%d")
+        present = datetime.now()
+        if dt.date() > present.date():
+            raise ValueError("Future date is not acceptable.")
+        return date

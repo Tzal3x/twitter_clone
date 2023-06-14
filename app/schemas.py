@@ -43,6 +43,10 @@ class UserCreate(UserBase):
     def validate_phone_number(cls, phone_number):
         return Validator.is_phone_number(phone_number)
 
+    @validator('birth')
+    def validate_birthday(cls, birth):
+        return Validator.date_not_in_future(birth)
+
 
 class UserReturn(UserBase):
     id: int
