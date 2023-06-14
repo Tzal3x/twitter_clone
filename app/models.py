@@ -1,6 +1,5 @@
 """SQL Alchemy (ORM) & Alembic (Migration Tool)"""
-import re
-from sqlalchemy.orm import relationship, validates
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql.sqltypes import TIMESTAMP
 from sqlalchemy.sql.expression import text
 from sqlalchemy import (
@@ -9,7 +8,6 @@ from sqlalchemy import (
     )
 from sqlalchemy_utils import EmailType
 from app.database import Base
-import phonenumbers
 
 
 class Users(Base):
@@ -31,19 +29,6 @@ class Users(Base):
 
     tweets = relationship("Tweets", back_populates="user")
     comments = relationship("Comments", back_populates="user")
-
-    @validates('username')
-    def validate_username(self, _key, username):
-        return Validator.min_length(username, 4)
-
-    @validates('password')
-    def validate_password(self, _key, password):
-        Validator.min_length(password, 4)
-        return Validator.is_strong(password)
-
-    @validates('phone_number')
-    def validate_phone_number(self, _key, phone_number):
-        return Validator.is_phone_number(phone_number)
 
 
 class Tweets(Base):
@@ -122,55 +107,3 @@ class Follows(Base):
     created_at = Column(TIMESTAMP(timezone=True),
                         server_default=text('NOW()'), nullable=False)
 # endregion
-
-
-class Validator:
-    """
-    Helper class that validates field constraints.
-    """
-    @staticmethod
-    def min_length(column_field: str, length: int) -> str:
-        """
-        Checks if a string field
-        """
-        if len(column_field) < length:
-            error_msg = (
-                f"{column_field} is too short! "
-                f"Must be at least >= {length}."
-            )
-            raise ValueError(error_msg)
-        return column_field
-
-    @staticmethod
-    def is_strong(password: str):
-        """
-        Verify the strength of 'password'
-        """
-        length_error = len(password) < 8
-        digit_error = re.search(r"\d", password) is None
-        uppercase_error = re.search(r"[A-Z]", password) is None
-        lowercase_error = re.search(r"[a-z]", password) is None
-        regex = r"[ !#$%&'()*+,-./[\\\]^_`{|}~"+r'"]'
-        symbol_error = re.search(regex, password) is None
-        password_ok = not (length_error or digit_error or
-                           uppercase_error or lowercase_error or
-                           symbol_error)
-        if not password_ok:
-            error_msg = (
-                "Password is not strong enough!"
-                "Please check the following:\n"
-                "- 8 characters length or more\n"
-                "- 1 digit or more\n"
-                "- 1 symbol or more\n"
-                "- 1 uppercase letter or more\n"
-                "- 1 lowercase letter or more\n"
-            )
-            raise ValueError(error_msg)
-        return password
-
-    @staticmethod
-    def is_phone_number(phone_number) -> str:
-        pn = phonenumbers.parse(phone_number, None)
-        if not phonenumbers.is_valid_number(pn):
-            raise ValueError("Not a valid phone number.")
-        return phone_number

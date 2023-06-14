@@ -1,5 +1,6 @@
 from datetime import datetime, date
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, validator
+from app.helpers import Validator
 
 
 class Token(BaseModel):
@@ -11,9 +12,9 @@ class UserBase(BaseModel):
     # Required
     username: str
     email: EmailStr
-    phone_number: str
 
     # Optional
+    phone_number: str | None = None
     first_name: str | None = None
     last_name: str | None = None
     birth: date | None = None
@@ -29,6 +30,22 @@ class UserUpdate(BaseModel):
 
 class UserCreate(UserBase):
     password: str
+
+    @validator('password')
+    def is_strong(cls, password: str):
+        return Validator.is_strong(password)
+
+    @validator('username')
+    def validate_username(cls, username):
+        return Validator.min_length(username, 4)
+
+    @validator('phone_number')
+    def validate_phone_number(cls, phone_number):
+        return Validator.is_phone_number(phone_number)
+
+    @validator('birth')
+    def validate_birthday(cls, birth):
+        return Validator.date_not_in_future(birth)
 
 
 class UserReturn(UserBase):

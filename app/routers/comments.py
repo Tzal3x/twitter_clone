@@ -14,14 +14,16 @@ router = APIRouter(
 )
 
 
-@router.post('/{tweet_id}', status_code=status.HTTP_201_CREATED, response_model=CommentReturn)
+@router.post('/{tweet_id}',
+             status_code=status.HTTP_201_CREATED, response_model=CommentReturn)
 def add_comment_to_tweet(
-    tweet_id: int,
-    comment: Annotated[CommentCreate, Body],
-    current_user: Annotated[UserReturn, Depends(authorize_user)],
-    db: Session = Depends(get_db)):
-    
-    new_comment = Comments(tweet_id=tweet_id, user_id=current_user.id, **comment.dict())
+        tweet_id: int,
+        comment: Annotated[CommentCreate, Body],
+        current_user: Annotated[UserReturn, Depends(authorize_user)],
+        db: Session = Depends(get_db)):
+
+    new_comment = Comments(tweet_id=tweet_id,
+                           user_id=current_user.id, **comment.dict())
     try:
         db.add(new_comment)
         db.commit()
@@ -34,28 +36,30 @@ def add_comment_to_tweet(
         db.rollback()
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail=f"Character limit exceeded")
-    
+
     return new_comment
 
 
 @router.put('/{comment_id}', response_model=CommentReturn)
 def update_comment_to_tweet(
-    comment_id: int,
-    updated_comment: Annotated[CommentCreate, Body],
-    current_user: Annotated[UserReturn, Depends(authorize_user)],
-    db: Session = Depends(get_db)):
-    
+        comment_id: int,
+        updated_comment: Annotated[CommentCreate, Body],
+        current_user: Annotated[UserReturn, Depends(authorize_user)],
+        db: Session = Depends(get_db)):
+
     comment_query = db.query(Comments).filter(Comments.id == comment_id)
 
     comment = comment_query.first()
 
-    if comment == None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f"Comment with id: {comment_id} does not exist")
+    if not comment:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Comment with id: {comment_id} does not exist")
 
     if comment.user_id != current_user.id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
-                            detail="Not authorized to perform requested action")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to perform requested action")
 
     comment_query.update(updated_comment.dict(), synchronize_session=False)
     db.commit()
@@ -64,14 +68,15 @@ def update_comment_to_tweet(
 
 @router.delete('/{comment_id}', status_code=status.HTTP_204_NO_CONTENT)
 def remove_comment_from_tweet(comment_id: int,
-                              current_user: Annotated[UserReturn, Depends(authorize_user)],
+                              current_user: Annotated[UserReturn,
+                                                      Depends(authorize_user)],
                               db: Annotated[Session, Depends(get_db)]):
-    
+
     comment_query = db.query(Comments).filter(Comments.id == comment_id)
 
     comment = comment_query.first()
 
-    if comment == None:
+    if not comment:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"Comment with id: {id} does not exist")
 

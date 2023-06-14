@@ -1,6 +1,8 @@
 """Starting point and sub-paths are defined here"""
 from fastapi import FastAPI
-from app.routers import users, login, tweets, likes, comments, follows
+from app.routers import (
+    users, login, tweets, likes, comments, follows
+)
 
 app = FastAPI()
 app.include_router(users.router)
@@ -11,8 +13,8 @@ app.include_router(likes.router)
 app.include_router(comments.router)
 
 
-
 @app.get('/')
 def root():
     """Root path"""
-    return { "message": "Welcome to our Twitter Clone! Go to '/docs' for the API documentation." }
+    return {"message": "Welcome to our Twitter Clone! "
+            "Go to '/docs' for the API documentation."}

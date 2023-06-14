@@ -1,11 +1,7 @@
-"""
-TODO test_create_invalid_users(invalid_user)
-TODO test_invalid_patching(user) Try changing username or email
-"""
-
 import pytest
 from fastapi import status
 from app.tests.conftest import client
+from app.tests.cases.user_cases import invalid_registration_users
 
 
 @pytest.mark.usefixtures("user")
@@ -46,3 +42,9 @@ def test_update_current_user_info():
                                 "bio": "Updated bio"
                             })
     assert response.status_code == status.HTTP_204_NO_CONTENT
+
+
+@pytest.mark.parametrize("invalid_user", invalid_registration_users)
+def test_create_invalid_user(invalid_user):
+    response = client.post("/users", json=invalid_user)
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
