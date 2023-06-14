@@ -12,9 +12,9 @@ class UserBase(BaseModel):
     # Required
     username: str
     email: EmailStr
-    phone_number: str
 
     # Optional
+    phone_number: str | None = None
     first_name: str | None = None
     last_name: str | None = None
     birth: date | None = None
