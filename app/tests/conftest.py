@@ -1,9 +1,9 @@
 """
 This is a special module that gets detected
 by pytest and automatically imports the fixtures
-to the other test suites. 
+to the other test suites.
 
-We also define test configurations were needed. 
+We also define test configurations were needed.
 """
 import json
 from fastapi.testclient import TestClient
@@ -21,7 +21,7 @@ client = TestClient(app)
 @pytest.fixture(params=users, name="user")
 def temp_user(request):
     """
-    Creates a temp user before a test that uses this 
+    Creates a temp user before a test that uses this
     fixture and when the test ends, the user
     gets deleted.
     """
@@ -43,7 +43,8 @@ def user_setup(user: dict) -> str:
     using the corresponding endpoint and returns an access token.
     """
     response = client.post("/users/", json=user)
-    assert response.status_code == status.HTTP_201_CREATED, "User creation failed!"
+    assert response.status_code == status.HTTP_201_CREATED, \
+        "User creation failed!"
 
     token = create_access_token(
         {'sub': user["username"]}
@@ -68,14 +69,15 @@ def temp_tweet(request):
     yield tweet
 
     response = client.delete(f"tweets/{tweet['id']}")
-    assert response.status_code == status.HTTP_204_NO_CONTENT, "Failed to delete tweet!"
+    assert response.status_code == status.HTTP_204_NO_CONTENT, \
+        "Failed to delete tweet!"
 
 
 @pytest.fixture
 def multiple_temp_tweets():
     """
     Creates multiple tweets so that a user can have many at once.
-    Then when the test ends, the tweets get deleted (teardown step). 
+    Then when the test ends, the tweets get deleted (teardown step).
     """
     created_tweets = []
     for tweet in tweets:
@@ -90,4 +92,5 @@ def multiple_temp_tweets():
     for created_tweet in created_tweets:
         tweet_id = created_tweet["id"]
         response = client.delete(f"tweets/{tweet_id}")
-        assert response.status_code == status.HTTP_204_NO_CONTENT, "Failed to delete tweet!"
+        assert response.status_code == status.HTTP_204_NO_CONTENT, \
+            "Failed to delete tweet!"
