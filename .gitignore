@@ -131,3 +131,6 @@ dmypy.json
 
 # VSCODE
 .vscode/
+
+# Cheatsheets and notes
+*cheatsheet.txt
