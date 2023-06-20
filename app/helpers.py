@@ -1,10 +1,12 @@
 import re
 from os import environ
+from dotenv import load_dotenv
 import phonenumbers
 from datetime import datetime
 
 
 def create_db_url() -> str:
+    load_dotenv()
     db_url = "%s://%s:%s@%s/%s" % (
         environ["DB_SERVICE"],
         environ["DB_USERNAME"],
@@ -16,6 +18,7 @@ def create_db_url() -> str:
 
 
 def get_security_configs() -> dict[str]:
+    load_dotenv()
     return {
         "TOKEN_CREATION_SECRET_KEY": environ["TOKEN_CREATION_SECRET_KEY"],
         "HASH_ALGORITHM": environ["HASH_ALGORITHM"],
@@ -85,12 +88,11 @@ class Validator:
         return password
 
     @staticmethod
-    def date_not_in_future(date: str) -> str:
+    def date_not_in_future(date) -> str:
         """
         Verify the strength of 'password'
         """
-        dt = datetime.strptime(date, "%Y-%m-%d")
         present = datetime.now()
-        if dt.date() > present.date():
+        if date > present.date():
             raise ValueError("Future date is not acceptable.")
         return date
