@@ -3,6 +3,7 @@ from fastapi import FastAPI
 from app.routers import (
     users, login, tweets, likes, comments, follows
 )
+import socket
 
 app = FastAPI()
 app.include_router(users.router)
@@ -17,4 +18,5 @@ app.include_router(comments.router)
 def root():
     """Root path"""
     return {"message": "Welcome to our Twitter Clone! "
-            "Go to '/docs' for the API documentation."}
+            "Go to '/docs' for the API documentation.",
+            "Container Id": f'{socket.gethostname()}'}
