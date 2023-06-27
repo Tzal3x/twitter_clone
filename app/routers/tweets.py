@@ -2,6 +2,7 @@ from typing import Annotated, List
 from fastapi import APIRouter, status, Response, Depends, HTTPException, Body
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import DataError
+from sqlalchemy import desc
 from app.database import get_db
 from app.models import Tweets, Users
 from app.schemas import TweetBase, TweetReturn, TweetUpdate, UserReturn
@@ -17,23 +18,40 @@ router = APIRouter(
 
 @router.get('/per_user/me', response_model=List[TweetReturn])
 def get_tweet(current_user: Annotated[UserReturn, Depends(authorize_user)],
-              db: Annotated[Session, Depends(get_db)]) -> List[TweetReturn]:
+              db: Annotated[Session, Depends(get_db)],
+              offset: int = 0,
+              limit: int = 10) -> List[TweetReturn]:
 
-    tweets = db.query(Tweets).filter(current_user.id == Tweets.user_id).all()
+    tweets = db.query(Tweets)\
+               .filter(current_user.id == Tweets.user_id)\
+               .order_by(desc(Tweets.created_at))\
+               .offset(offset)\
+               .limit(limit)\
+               .all()
     return tweets
 
 
 @router.get('/per_user/{id}', response_model=List[TweetReturn])
 def get_tweet(id: int,
               _: Annotated[UserReturn, Depends(authorize_user)],
-              db: Annotated[Session, Depends(get_db)]) -> List[TweetReturn]:
+              db: Annotated[Session, Depends(get_db)],
+              offset: int = 0,
+              limit: int = 10) -> List[TweetReturn]:
 
-    user = db.query(Users).filter(Users.id == id).first()
+    user = db.query(Users)\
+             .filter(Users.id == id)\
+             .first()
+
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"User with id: {id} was not found")
 
-    tweets = db.query(Tweets).filter(id == Tweets.user_id).all()
+    tweets = db.query(Tweets)\
+               .filter(id == Tweets.user_id)\
+               .order_by(desc(Tweets.created_at))\
+               .offset(offset)\
+               .limit(limit)\
+               .all()
     return tweets
 
 
