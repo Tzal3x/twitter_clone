@@ -17,10 +17,11 @@ router = APIRouter(
 
 
 @router.get('/per_user/me', response_model=List[TweetReturn])
-def get_tweet(current_user: Annotated[UserReturn, Depends(authorize_user)],
-              db: Annotated[Session, Depends(get_db)],
-              offset: int = 0,
-              limit: int = 10) -> List[TweetReturn]:
+def get_current_users_tweets(
+        current_user: Annotated[UserReturn, Depends(authorize_user)],
+        db: Annotated[Session, Depends(get_db)],
+        offset: int = 0,
+        limit: int = 10) -> List[TweetReturn]:
 
     tweets = db.query(Tweets)\
                .filter(current_user.id == Tweets.user_id)\
@@ -32,12 +33,11 @@ def get_tweet(current_user: Annotated[UserReturn, Depends(authorize_user)],
 
 
 @router.get('/per_user/{id}', response_model=List[TweetReturn])
-def get_tweet(id: int,
-              _: Annotated[UserReturn, Depends(authorize_user)],
-              db: Annotated[Session, Depends(get_db)],
-              offset: int = 0,
-              limit: int = 10) -> List[TweetReturn]:
-
+def get_tweets_per_user(id: int,
+                        _: Annotated[UserReturn, Depends(authorize_user)],
+                        db: Annotated[Session, Depends(get_db)],
+                        offset: int = 0,
+                        limit: int = 10) -> List[TweetReturn]:
     user = db.query(Users)\
              .filter(Users.id == id)\
              .first()
