@@ -4,9 +4,10 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import DataError
 from sqlalchemy import desc
 from app.database import get_db
-from app.models import Tweets, Users
+from app.models import Tweets, Users, Hashtags
 from app.schemas import TweetBase, TweetReturn, TweetUpdate, UserReturn
 from app.security import authorize_user
+from app.helpers import MetadataExtractor
 
 
 router = APIRouter(
@@ -74,7 +75,7 @@ def get_tweet(id: int,
 def create_tweet(tweet: TweetBase,
                  current_user: Annotated[UserReturn, Depends(authorize_user)],
                  db: Annotated[Session, Depends(get_db)]) -> TweetReturn:
-    new_tweet = Tweets(user_id=current_user.id, **tweet.dict())
+    new_tweet = Tweets(user_id=current_user.id, **tweet.dict())    
     try:
         db.add(new_tweet)
         db.commit()
@@ -84,6 +85,14 @@ def create_tweet(tweet: TweetBase,
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail="Title or body character limit exceeded")
 
+    hashtags = MetadataExtractor.extract_hashtags(tweet.dict())
+    if hashtags:
+        hashtags_for_db = Hashtags(tweet_id=new_tweet.id, tags=hashtags)
+        try:
+            db.add(hashtags_for_db)
+            db.commit()
+        except DataError:
+            pass  # Failed to create hashtags
     return new_tweet
 
 
@@ -95,18 +104,30 @@ def update_tweet(id: int,
 
     tweet_query = db.query(Tweets).filter(Tweets.id == id)
     tweet = tweet_query.first()
-
     if tweet is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"Tweet with id: {id} does not exist")
-
     if tweet.user_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to perform requested action")
-
     tweet_query.update(updated_tweet.dict(), synchronize_session=False)
     db.commit()
+
+    hashtags = MetadataExtractor.extract_hashtags(updated_tweet.dict())
+    hashtags_for_db = Hashtags(tweet_id=tweet.id, tags=hashtags)
+    if not hashtags:
+        hashtag_query = db.query(Hashtags).filter(Hashtags.tweet_id == id)
+        hashtag_query.delete(synchronize_session=False)
+        db.commit()
+    elif tweet.hashtags:
+        hashtag_query = db.query(Hashtags).filter(Hashtags.tweet_id == id)
+        hashtag_query.update({"tags": hashtags})
+        db.commit()
+    else:
+        db.add(hashtags_for_db)
+        db.commit()        
+
     return tweet_query.first()
 
 
