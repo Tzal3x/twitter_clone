@@ -28,6 +28,29 @@ def get_security_configs() -> dict[str]:
     }
 
 
+class MetadataExtractor:
+    """
+    Extracts various metadata from the body or title of Tweets.
+
+    e.g. hashtags etc
+    """
+    @staticmethod
+    def extract_hashtags(tweet: dict) -> list[str | None]:
+        """
+        Given a tweet, extracts the hashtags from the title and
+        body. Hashtags are extracted in lowercase and no duplicates
+        are included.
+        """
+        hashtag_regex = re.compile(r"#(\w+)")
+        res = []
+        title_hashtags = hashtag_regex.findall(tweet["title"].lower())
+        body_hashtags = hashtag_regex.findall(tweet["body"].lower())
+        res.extend(title_hashtags)
+        res.extend(body_hashtags)
+        res_no_duplicates = list(set(res))
+        return res_no_duplicates
+
+
 class Validator:
     """
     Helper class that validates field constraints.

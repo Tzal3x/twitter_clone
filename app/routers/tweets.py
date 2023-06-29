@@ -2,10 +2,13 @@ from typing import Annotated, List
 from fastapi import APIRouter, status, Response, Depends, HTTPException, Body
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import DataError
+from sqlalchemy import desc
 from app.database import get_db
-from app.models import Tweets, Users
+from app.models import Tweets, Users, Hashtags
 from app.schemas import TweetBase, TweetReturn, TweetUpdate, UserReturn
 from app.security import authorize_user
+from app.helpers import MetadataExtractor
+
 
 router = APIRouter(
     prefix="/tweets",
@@ -13,39 +16,50 @@ router = APIRouter(
     responses={404: {"description": "Not found"}},
 )
 
-'''
-TODO - Get user timeline (after implementing follows)
-'''
-
 
 @router.get('/per_user/me', response_model=List[TweetReturn])
-def get_my_tweets(current_user: Annotated[UserReturn, Depends(authorize_user)],
-                  db: Annotated[Session, Depends(get_db)]
-                  ) -> List[TweetReturn]:
+def get_current_users_tweets(
+        current_user: Annotated[UserReturn, Depends(authorize_user)],
+        db: Annotated[Session, Depends(get_db)],
+        offset: int = 0,
+        limit: int = 10) -> List[TweetReturn]:
 
-    tweets = db.query(Tweets).filter(current_user.id == Tweets.user_id).all()
+    tweets = db.query(Tweets)\
+               .filter(current_user.id == Tweets.user_id)\
+               .order_by(desc(Tweets.created_at))\
+               .offset(offset)\
+               .limit(limit)\
+               .all()
     return tweets
 
 
 @router.get('/per_user/{id}', response_model=List[TweetReturn])
-def get_tweet_per_user(id: int,
-                       _: Annotated[UserReturn, Depends(authorize_user)],
-                       db: Annotated[Session, Depends(get_db)]
-                       ) -> List[TweetReturn]:
+def get_tweets_per_user(id: int,
+                        _: Annotated[UserReturn, Depends(authorize_user)],
+                        db: Annotated[Session, Depends(get_db)],
+                        offset: int = 0,
+                        limit: int = 10) -> List[TweetReturn]:
+    user = db.query(Users)\
+             .filter(Users.id == id)\
+             .first()
 
-    user = db.query(Users).filter(Users.id == id).first()
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"User with id: {id} was not found")
 
-    tweets = db.query(Tweets).filter(id == Tweets.user_id).all()
+    tweets = db.query(Tweets)\
+               .filter(id == Tweets.user_id)\
+               .order_by(desc(Tweets.created_at))\
+               .offset(offset)\
+               .limit(limit)\
+               .all()
     return tweets
 
 
 @router.get('/{id}', response_model=TweetReturn)
-def get_specific_tweet(id: int,
-                       _: Annotated[UserReturn, Depends(authorize_user)],
-                       db: Annotated[Session, Depends(get_db)]) -> TweetReturn:
+def get_tweet(id: int,
+              _: Annotated[UserReturn, Depends(authorize_user)],
+              db: Annotated[Session, Depends(get_db)]) -> TweetReturn:
 
     tweet = db.query(Tweets).filter(Tweets.id == id).first()
 
@@ -71,6 +85,14 @@ def create_tweet(tweet: TweetBase,
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail="Title or body character limit exceeded")
 
+    hashtags = MetadataExtractor.extract_hashtags(tweet.dict())
+    if hashtags:
+        hashtags_for_db = Hashtags(tweet_id=new_tweet.id, tags=hashtags)
+        try:
+            db.add(hashtags_for_db)
+            db.commit()
+        except DataError:
+            pass  # Failed to create hashtags
     return new_tweet
 
 
@@ -82,18 +104,30 @@ def update_tweet(id: int,
 
     tweet_query = db.query(Tweets).filter(Tweets.id == id)
     tweet = tweet_query.first()
-
     if tweet is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"Tweet with id: {id} does not exist")
-
     if tweet.user_id != current_user.id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
-                            detail="Not authorized to perform\
-                                requested action")
-
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to perform requested action")
     tweet_query.update(updated_tweet.dict(), synchronize_session=False)
     db.commit()
+
+    hashtags = MetadataExtractor.extract_hashtags(updated_tweet.dict())
+    hashtags_for_db = Hashtags(tweet_id=tweet.id, tags=hashtags)
+    if not hashtags:
+        hashtag_query = db.query(Hashtags).filter(Hashtags.tweet_id == id)
+        hashtag_query.delete(synchronize_session=False)
+        db.commit()
+    elif tweet.hashtags:
+        hashtag_query = db.query(Hashtags).filter(Hashtags.tweet_id == id)
+        hashtag_query.update({"tags": hashtags})
+        db.commit()
+    else:
+        db.add(hashtags_for_db)
+        db.commit()
+
     return tweet_query.first()
 
 
@@ -111,9 +145,9 @@ def delete_tweet(id: int,
                             detail=f"Tweet with id: {id} does not exist")
 
     if tweet.user_id != current_user.id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
-                            detail="Not authorized to perform\
-                                requested action")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to perform requested action")
 
     tweet_query.delete(synchronize_session=False)
     db.commit()

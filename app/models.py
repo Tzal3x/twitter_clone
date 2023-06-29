@@ -4,8 +4,9 @@ from sqlalchemy.sql.sqltypes import TIMESTAMP
 from sqlalchemy.sql.expression import text
 from sqlalchemy import (
     Column, ForeignKey, Unicode,
-    Integer, String, DateTime,
+    Integer, String, DateTime
     )
+from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy_utils import EmailType
 from app.database import Base
 
@@ -47,6 +48,7 @@ class Tweets(Base):
     user = relationship("Users", back_populates="tweets",
                         cascade="all, delete")
     comments = relationship("Comments", back_populates="tweet")
+    hashtags = relationship("Hashtags", back_populates="tweet")
 
 
 class Comments(Base):
@@ -67,6 +69,15 @@ class Comments(Base):
                         cascade="all, delete")
     tweet = relationship("Tweets", back_populates="comments",
                          cascade="all, delete")
+
+
+class Hashtags(Base):
+    __tablename__ = 'hashtags'
+
+    tweet_id = Column(Integer, ForeignKey('tweets.id', ondelete='CASCADE'),
+                      nullable=False, primary_key=True)
+    tags = Column(ARRAY(Unicode, dimensions=1))
+    tweet = relationship("Tweets", back_populates="hashtags")
 
 
 # region Association tables
