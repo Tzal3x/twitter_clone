@@ -22,12 +22,12 @@ def authenticate_user(db, username: str, password: str) -> Users | None:
         return False
     if not verify_password(password, user.password):
         return False
-    return user    
+    return user
 
 
 def authorize_user(token: Annotated[str, Depends(oauth2_scheme)],
                    db: Session = Depends(get_db)) -> Users:
-    
+
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -38,19 +38,21 @@ def authorize_user(token: Annotated[str, Depends(oauth2_scheme)],
         username: str = payload.get("sub")
         if username is None:
             raise credentials_exception
-        
-        expiration_unix_timestamp = datetime.utcfromtimestamp(int(payload['exp']))
+
+        expiration_unix_timestamp = datetime.utcfromtimestamp(
+            int(payload['exp'])
+            )
         token_has_expired = datetime.utcnow() > expiration_unix_timestamp
         if token_has_expired:
             raise credentials_exception
-        
+
     except JWTError:
         raise credentials_exception
-    
+
     user = Queries.get_user(db, username=username)
     if user is None:
         raise credentials_exception
-    
+
     return user
 
 
@@ -62,25 +64,24 @@ def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
 
 
-def create_access_token(data: dict, 
+def create_access_token(data: dict,
                         expires_delta: timedelta = timedelta(
                             minutes=security_configs["ACCESS_TOKEN_EXPIRE_MINUTES"]
                             )) -> str:
     to_encode = data.copy()
     expire = datetime.utcnow() + expires_delta
     to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, 
-                             security_configs["TOKEN_CREATION_SECRET_KEY"], 
+    encoded_jwt = jwt.encode(to_encode,
+                             security_configs["TOKEN_CREATION_SECRET_KEY"],
                              algorithm=security_configs["HASH_ALGORITHM"])
     return encoded_jwt
 
 
 def decode_access_token(token: str) -> dict[str, Any]:
     """
-    Verify that the access token is valid. 
+    Verify that the access token is valid.
     """
 
-    return jwt.decode(token, 
-                      security_configs["TOKEN_CREATION_SECRET_KEY"], 
+    return jwt.decode(token,
+                      security_configs["TOKEN_CREATION_SECRET_KEY"],
                       algorithms=[security_configs["HASH_ALGORITHM"]])
- 

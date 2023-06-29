@@ -58,7 +58,7 @@ def unfollow(username: Annotated[str, Query],
 def get_followers(username: Annotated[str, Query],
                   limit: int = 10,
                   _: Users = Depends(authorize_user),
-                  db: Session = Depends(get_db)):  
+                  db: Session = Depends(get_db)):
     """Get the usernames of the followers of a user"""
     user: Users = Queries.get_user(db, username)
     query = db.query(Follows.follower_id, Users.username)\
@@ -75,7 +75,7 @@ def get_followers(username: Annotated[str, Query],
 def get_following(username: Annotated[str, Query],
                   limit: int = 10,
                   _: Users = Depends(authorize_user),
-                  db: Session = Depends(get_db)):  
+                  db: Session = Depends(get_db)):
     """Get the usermames that a user follows"""
     user: Users = Queries.get_user(db, username)
     query = db.query(Follows.followee_id, Users.username)\
