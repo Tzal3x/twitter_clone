@@ -6,11 +6,12 @@ from app.routers import (
 import socket
 import time
 import structlog
-import logging
 from uvicorn.protocols.utils import get_path_with_query_string
 from asgi_correlation_id import CorrelationIdMiddleware
 from asgi_correlation_id.context import correlation_id
 import os
+import json
+from starlette.concurrency import iterate_in_threadpool
 from pydantic import parse_obj_as
 from app.custom_logging import setup_logging
 
@@ -32,6 +33,19 @@ app.include_router(comments.router)
 access_logger = structlog.stdlib.get_logger("api.access")
 
 
+async def set_body(request: Request, body: bytes):
+    async def receive():
+        return {"type": "http.request", "body": body}
+
+    request._receive = receive
+
+
+async def get_body(request: Request) -> bytes:
+    body = await request.json()
+    set_body(request, body)
+    return body
+
+
 @app.middleware("http")
 async def logging_middleware(request: Request, call_next) -> Response:
     structlog.contextvars.clear_contextvars()
@@ -46,12 +60,19 @@ async def logging_middleware(request: Request, call_next) -> Response:
     # (process time, request ID...)
     response = Response(status_code=500)
     try:
+        await set_body(request, await request.body())
+        request_body = await get_body(request)
         response = await call_next(request)
     except Exception:
         # TODO: Validate that we don't swallow exceptions (unit test?)
         structlog.stdlib.get_logger("api.error").exception("Uncaught exception")
         raise
     finally:
+        response_body = [section async for section in response.body_iterator]
+        response.body_iterator = iterate_in_threadpool(iter(response_body))
+        response_body = response_body.decode('utf8').replace("'", '"')
+        response_body = json.loads(response_body)
+        response_body = json.dumps(response_body, sort_keys=True)
         process_time = time.perf_counter_ns() - start_time
         status_code = response.status_code
         url = get_path_with_query_string(request.scope)
@@ -59,9 +80,11 @@ async def logging_middleware(request: Request, call_next) -> Response:
         client_port = request.client.port
         http_method = request.method
         http_version = request.scope["http_version"]
-        # Recreate the Uvicorn access log format, but add all parameters as structured information
+        # Recreate the Uvicorn access log format, but add all
+        # parameters as structured information
         access_logger.debug(
-            f"""{client_host}:{client_port} - "{http_method} {url} HTTP/{http_version}" {status_code}""",
+            f"""{client_host}:{client_port} - "{http_method} {url} HTTP/{
+                http_version}" {status_code}""",
             http={
                 "url": str(request.url),
                 "status_code": status_code,
@@ -70,7 +93,13 @@ async def logging_middleware(request: Request, call_next) -> Response:
                 "version": http_version,
             },
             network={"client": {"ip": client_host, "port": client_port}},
+            request={
+                "body": request_body,
+                "path_params": dict(request.path_params),
+                "query_params": dict(request.query_params),
+                },
             duration=process_time,
+            response=response_body
         )
         response.headers["X-Process-Time"] = str(process_time / 10 ** 9)
         return response

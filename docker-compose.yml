@@ -16,6 +16,7 @@ services:
   web:
     depends_on:
       - postgres
+      - graylog
     build: .
     container_name: twitter_clone_web_server
     environment:
@@ -29,9 +30,14 @@ services:
       - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES}
       
       - HASH_ALGORITHM=${HASH_ALGORITHM}
+    logging:
+      driver: gelf
+      options:
+          gelf-address: udp://127.0.0.1:12201
+          tag: web
     command: sh -c "alembic upgrade head && uvicorn app.main:app --reload --host 0.0.0.0"
     ports:
-      - "8000"
+      - "8000:8000"
 
   nginx:
     image: nginx:latest
@@ -44,6 +50,8 @@ services:
 
   mongodb:
     image: "mongo:5.0"
+    networks:
+      - graylog
     volumes:
       - "mongodb_data:/data/db"
     restart: "on-failure"
@@ -64,13 +72,16 @@ services:
       nofile:
         soft: 65536
         hard: 65536
+    networks:
+      - graylog
     volumes:
       - "os_data:/usr/share/opensearch/data"
     restart: "on-failure"
 
   graylog:
-    hostname: "server"
     image: "${GRAYLOG_IMAGE:-graylog/graylog:5.0}"
+    networks:
+      - graylog
     depends_on:
       opensearch:
         condition: "service_started"
@@ -102,6 +113,10 @@ services:
       - "graylog_data:/usr/share/graylog/data/data"
       - "graylog_journal:/usr/share/graylog/data/journal"
     restart: "on-failure"
+
+networks:
+  graylog:
+      driver: bridge
 
 volumes:
   db_data:
