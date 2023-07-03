@@ -16,14 +16,15 @@ router = APIRouter(
 
 """ Likes on tweets """
 @router.post('/tweet/{id}', status_code=status.HTTP_201_CREATED)
-def add_like_to_tweet(id: int, 
+def add_like_to_tweet(id: int,
                       current_user: Annotated[UserReturn, Depends(authorize_user)],
                       db: Annotated[Session, Depends(get_db)]):
-    
+
     '''
     We could optimize error handling here, by seperately check each case.
-    However by letting the exception below handling both cases at once, we keep our code
-    short and simple. Besides, there is no need for an extra query, which checks if tweet exists.
+    However by letting the exception below handling both cases at once,
+    we keep our code short and simple. Besides, there is no need for an extra
+    query, which checks if tweet exists.
     '''
     like_on_tweet = TweetLikes(tweet_id=id, user_id=current_user.id)
     try:
@@ -33,8 +34,10 @@ def add_like_to_tweet(id: int,
     except exc.SQLAlchemyError:
         db.rollback()
         raise HTTPException(status_code=status.HTTP_409_CONFLICT,
-                            detail=f"User with id: {current_user.id} has already liked tweet with id: {id}, or tweet does not exist.")
-        
+                            detail=f"User with id: {current_user.id} has\
+                                already liked tweet with id: {id}, or tweet\
+                                    does not exist.")
+
     return Response(status_code=status.HTTP_201_CREATED)
 
 
@@ -42,7 +45,7 @@ def add_like_to_tweet(id: int,
 def remove_like_from_tweet(id: int,
                            current_user: Annotated[UserReturn, Depends(authorize_user)],
                            db: Annotated[Session, Depends(get_db)]):
-    
+
     tweet_query = db.query(Tweets).filter(Tweets.id == id)
 
     tweet = tweet_query.first()
@@ -59,10 +62,10 @@ def remove_like_from_tweet(id: int,
 
     like_on_tweet = like_on_tweet_query.first()
 
-    if like_on_tweet == None:
+    if like_on_tweet is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"User with id: {current_user.id} never liked this tweet in the first place")
-    
+
     like_on_tweet_query.delete(synchronize_session=False)
     db.commit()
 
@@ -71,10 +74,10 @@ def remove_like_from_tweet(id: int,
 
 # """ Likes on comments """
 @router.post('/comment/{id}', status_code=status.HTTP_201_CREATED)
-def add_like_to_comment(id: int, 
+def add_like_to_comment(id: int,
                         current_user: Annotated[UserReturn, Depends(authorize_user)],
                         db: Annotated[Session, Depends(get_db)]):
-    
+
     like_on_comment = CommentLikes(comment_id=id, user_id=current_user.id)
     try:
         db.add(like_on_comment)
@@ -83,8 +86,10 @@ def add_like_to_comment(id: int,
     except exc.SQLAlchemyError:
         db.rollback()
         raise HTTPException(status_code=status.HTTP_409_CONFLICT,
-                            detail=f"User with id: {current_user.id} has already liked comment with id: {id}, or comment does not exist.")
-        
+                            detail=f"User with id: {current_user.id} has\
+                                already liked comment with id: {id},\
+                                    or comment does not exist.")
+
     return Response(status_code=status.HTTP_201_CREATED)
 
 
@@ -92,12 +97,12 @@ def add_like_to_comment(id: int,
 def remove_like_from_comment(id: int,
                              current_user: Annotated[UserReturn, Depends(authorize_user)],
                              db: Annotated[Session, Depends(get_db)]):
-    
+
     comment_query = db.query(Comments).filter(Comments.id == id)
 
     comment = comment_query.first()
 
-    if comment == None:
+    if comment is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"Comment with id: {id} does not exist")
 
@@ -109,10 +114,10 @@ def remove_like_from_comment(id: int,
 
     like_on_tweet = like_on_comment_query.first()
 
-    if like_on_tweet == None:
+    if like_on_tweet is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"User with id: {current_user.id} never liked this comment in the first place")
-    
+
     like_on_comment_query.delete(synchronize_session=False)
     db.commit()
 

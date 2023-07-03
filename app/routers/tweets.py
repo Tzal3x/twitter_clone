@@ -75,7 +75,7 @@ def get_tweet(id: int,
 def create_tweet(tweet: TweetBase,
                  current_user: Annotated[UserReturn, Depends(authorize_user)],
                  db: Annotated[Session, Depends(get_db)]) -> TweetReturn:
-    new_tweet = Tweets(user_id=current_user.id, **tweet.dict())    
+    new_tweet = Tweets(user_id=current_user.id, **tweet.dict())
     try:
         db.add(new_tweet)
         db.commit()
@@ -126,7 +126,7 @@ def update_tweet(id: int,
         db.commit()
     else:
         db.add(hashtags_for_db)
-        db.commit()        
+        db.commit()
 
     return tweet_query.first()
 
