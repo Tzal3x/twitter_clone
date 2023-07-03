@@ -18,7 +18,6 @@ services:
       - postgres
       - graylog
     build: .
-    container_name: twitter_clone_web_server
     environment:
       - DB_SERVICE=${DB_SERVICE}
       - DB_HOST=${DB_HOST}
@@ -37,7 +36,7 @@ services:
           tag: web
     command: sh -c "alembic upgrade head && uvicorn app.main:app --reload --host 0.0.0.0"
     ports:
-      - "8000:8000"
+      - "8000"
 
   nginx:
     image: nginx:latest

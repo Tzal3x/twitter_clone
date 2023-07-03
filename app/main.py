@@ -35,6 +35,8 @@ app.include_router(timeline.router)
 access_logger = structlog.stdlib.get_logger("api.access")
 
 
+# region Get Request Body workaround
+# https://stackoverflow.com/questions/69669808/fastapi-custom-middleware-getting-body-of-request-inside
 async def set_body(request: Request, body: bytes):
     async def receive():
         return {"type": "http.request", "body": body}
@@ -43,9 +45,10 @@ async def set_body(request: Request, body: bytes):
 
 
 async def get_body(request: Request) -> bytes:
-    body = await request.json()
+    body = await request.body()
     set_body(request, body)
     return body
+# endregion
 
 
 @app.middleware("http")
@@ -67,14 +70,15 @@ async def logging_middleware(request: Request, call_next) -> Response:
         response = await call_next(request)
     except Exception:
         # TODO: Validate that we don't swallow exceptions (unit test?)
-        structlog.stdlib.get_logger("api.error").exception("Uncaught exception")
+        structlog.stdlib.get_logger("api.error")\
+            .exception("Uncaught exception")
         raise
     finally:
         response_body = [section async for section in response.body_iterator]
         response.body_iterator = iterate_in_threadpool(iter(response_body))
-        response_body = response_body.decode('utf8').replace("'", '"')
-        response_body = json.loads(response_body)
-        response_body = json.dumps(response_body, sort_keys=True)
+        for res in response_body:
+            response_body = res.decode('utf8').replace("'", '"')
+
         process_time = time.perf_counter_ns() - start_time
         status_code = response.status_code
         url = get_path_with_query_string(request.scope)
@@ -95,12 +99,12 @@ async def logging_middleware(request: Request, call_next) -> Response:
                 "version": http_version,
             },
             network={"client": {"ip": client_host, "port": client_port}},
+            duration=process_time,
             request={
                 "body": request_body,
                 "path_params": dict(request.path_params),
                 "query_params": dict(request.query_params),
                 },
-            duration=process_time,
             response=response_body
         )
         response.headers["X-Process-Time"] = str(process_time / 10 ** 9)
