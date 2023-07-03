@@ -1,7 +1,8 @@
 """Starting point and sub-paths are defined here"""
 from fastapi import FastAPI, Response, Request
 from app.routers import (
-    users, login, tweets, likes, comments, follows
+    users, login, tweets, likes, comments, follows,
+    timeline
 )
 import socket
 import time
@@ -28,6 +29,7 @@ app.include_router(follows.router)
 app.include_router(tweets.router)
 app.include_router(likes.router)
 app.include_router(comments.router)
+app.include_router(timeline.router)
 
 
 access_logger = structlog.stdlib.get_logger("api.access")
