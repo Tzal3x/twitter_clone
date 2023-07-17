@@ -45,7 +45,7 @@ services:
     depends_on:
       - web
     ports:
-      - "80:80"
+      - "80:8000"
 
   mongodb:
     image: "mongo:5.0"
