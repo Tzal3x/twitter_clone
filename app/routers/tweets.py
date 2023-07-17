@@ -4,17 +4,30 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import DataError
 from sqlalchemy import desc
 from app.database import get_db
-from app.models import Tweets, Users, Hashtags
+from app.models import Tweets, Users, Hashtags, MentionsOnTweets
 from app.schemas import TweetBase, TweetReturn, TweetUpdate, UserReturn
 from app.security import authorize_user
 from app.helpers import MetadataExtractor
-
 
 router = APIRouter(
     prefix="/tweets",
     tags=["tweets"],
     responses={404: {"description": "Not found"}},
 )
+
+
+def get_mentions_from_mention_tags(tweet_id: int,
+                                   mention_tags: list[str] | list[None],
+                                   db: Session
+                                   ) -> list[MentionsOnTweets]:
+    mentions_for_db = []
+    for tag in mention_tags:
+        user = db.query(Users).filter(Users.username == tag).first()
+        if user:
+            mentions_for_db.append(
+                MentionsOnTweets(tweet_id=tweet_id,
+                                 user_id=user.id))
+    return mentions_for_db
 
 
 @router.get('/per_user/me', response_model=List[TweetReturn])
@@ -93,6 +106,18 @@ def create_tweet(tweet: TweetBase,
             db.commit()
         except DataError:
             pass  # Failed to create hashtags
+
+    mention_tags = MetadataExtractor.extract_mentions(tweet.dict())
+    if mention_tags:
+        try:
+            mentions_for_db = get_mentions_from_mention_tags(new_tweet.id,
+                                                             mention_tags,
+                                                             db)
+            if mentions_for_db:
+                db.add_all(mentions_for_db)
+                db.commit()
+        except DataError:
+            pass  # Failed to create mentions
     return new_tweet
 
 
@@ -126,6 +151,40 @@ def update_tweet(id: int,
         db.commit()
     else:
         db.add(hashtags_for_db)
+        db.commit()
+
+    mention_tags = MetadataExtractor.extract_mentions(updated_tweet.dict())
+    mentions_updated = get_mentions_from_mention_tags(id,
+                                                      mention_tags,
+                                                      db)
+    if not mentions_updated:
+        mention_query = db.query(MentionsOnTweets)\
+            .filter(MentionsOnTweets.tweet_id == id)
+        mention_query.delete(synchronize_session=False)
+        db.commit()
+    elif tweet.mentions:
+        try:
+            old_mentions = [mention.user_id for mention in tweet.mentions]
+            new_mentions = [mention.user_id for mention in mentions_updated]
+            mentions_to_delete = list(set(old_mentions)
+                                      .difference(new_mentions))
+            mentions_to_add = list(set(new_mentions).difference(old_mentions))
+            mentions_to_add = [MentionsOnTweets(tweet_id=id, user_id=user_id)
+                               for user_id in mentions_to_add]
+            if mentions_to_add:
+                db.add_all(mentions_to_add)
+                db.commit()
+            if mentions_to_delete:
+                for user_id in mentions_to_delete:
+                    mention_query = db.query(MentionsOnTweets)\
+                        .filter(MentionsOnTweets.tweet_id == id,
+                                MentionsOnTweets.user_id == user_id)
+                    mention_query.delete(synchronize_session=False)
+                    db.commit()
+        except DataError:
+            pass  # Failed to update mentions
+    else:
+        db.add_all(mentions_updated)
         db.commit()
 
     return tweet_query.first()

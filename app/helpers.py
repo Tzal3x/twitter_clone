@@ -50,6 +50,20 @@ class MetadataExtractor:
         res_no_duplicates = list(set(res))
         return res_no_duplicates
 
+    @staticmethod
+    def extract_mentions(item: dict) -> list[str | None]:
+        """
+        Given the body of a tweet or a comment, extracts the user mentions
+        from it. Mentions are extracted in lowercase and no duplicates
+        are included.
+        """
+        hashtag_regex = re.compile(r"@(\w+)")
+        res = []
+        mentions = hashtag_regex.findall(item["body"])
+        res.extend(mentions)
+        res_no_duplicates = list(set(res))
+        return res_no_duplicates
+
 
 class Validator:
     """

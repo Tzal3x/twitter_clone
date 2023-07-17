@@ -11,7 +11,6 @@ from uvicorn.protocols.utils import get_path_with_query_string
 from asgi_correlation_id import CorrelationIdMiddleware
 from asgi_correlation_id.context import correlation_id
 import os
-import json
 from starlette.concurrency import iterate_in_threadpool
 from pydantic import parse_obj_as
 from app.custom_logging import setup_logging

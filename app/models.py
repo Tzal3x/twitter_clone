@@ -30,6 +30,7 @@ class Users(Base):
 
     tweets = relationship("Tweets", back_populates="user")
     comments = relationship("Comments", back_populates="user")
+    mentions = relationship("MentionsOnTweets", back_populates="user")
 
 
 class Tweets(Base):
@@ -49,6 +50,7 @@ class Tweets(Base):
                         cascade="all, delete")
     comments = relationship("Comments", back_populates="tweet")
     hashtags = relationship("Hashtags", back_populates="tweet")
+    mentions = relationship("MentionsOnTweets", back_populates="tweet")
 
 
 class Comments(Base):
@@ -78,6 +80,19 @@ class Hashtags(Base):
                       nullable=False, primary_key=True)
     tags = Column(ARRAY(Unicode, dimensions=1))
     tweet = relationship("Tweets", back_populates="hashtags")
+
+
+class MentionsOnTweets(Base):
+    __tablename__ = 'mentions_on_tweets'
+
+    tweet_id = Column(Integer, ForeignKey('tweets.id', ondelete='CASCADE'),
+                      primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'),
+                     primary_key=True)
+    tweet = relationship("Tweets", back_populates="mentions",
+                         cascade="all, delete")
+    user = relationship("Users", back_populates="mentions",
+                        cascade="all, delete")
 
 
 # region Association tables
