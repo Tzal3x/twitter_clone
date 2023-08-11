@@ -36,7 +36,7 @@ services:
           tag: web
     command: sh -c "alembic upgrade head && uvicorn app.main:app --reload --host 0.0.0.0"
     ports:
-      - "8000"
+      - "8000:8000"
 
   nginx:
     image: nginx:latest
@@ -45,7 +45,7 @@ services:
     depends_on:
       - web
     ports:
-      - "80:8000"
+      - "8084:8000"
 
   mongodb:
     image: "mongo:5.0"
