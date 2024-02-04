@@ -1,6 +1,6 @@
 from datetime import datetime, date
-from datetime import datetime, date
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr, validator
+from app.helpers import Validator
 
 
 class Token(BaseModel):
@@ -9,12 +9,15 @@ class Token(BaseModel):
 
 
 class UserBase(BaseModel):
+    # Required
     username: str
+    email: EmailStr
+
+    # Optional
+    phone_number: str | None = None
     first_name: str | None = None
     last_name: str | None = None
     birth: date | None = None
-    email: str
-    phone_number: str
     bio: str | None = None
 
 
@@ -28,15 +31,67 @@ class UserUpdate(BaseModel):
 class UserCreate(UserBase):
     password: str
 
+    @validator('password')
+    def is_strong(cls, password: str):
+        return Validator.is_strong(password)
+
+    @validator('username')
+    def validate_username(cls, username):
+        return Validator.min_length(username, 4)
+
+    @validator('phone_number')
+    def validate_phone_number(cls, phone_number):
+        return Validator.is_phone_number(phone_number)
+
+    @validator('birth')
+    def validate_birthday(cls, birth):
+        return Validator.date_not_in_future(birth)
+
 
 class UserReturn(UserBase):
     id: int
-    is_active: bool
     created_at: datetime
-    updated_at: datetime 
-
-    # TODO: tweets: List[Tweets]
-    # TODO: comments: List[Comments]
+    updated_at: datetime
 
     class Config:
         orm_mode = True
+
+
+class FollowersReturn(BaseModel):
+    followers: list[str] | list[None]
+
+
+class FollowingReturn(BaseModel):
+    followees: list[str] | list[None]
+
+
+class TweetBase(BaseModel):
+    title: str
+    body: str
+
+
+class TweetReturn(TweetBase):
+    id: int
+    user_id: int
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        orm_mode = True
+
+
+class TweetUpdate(BaseModel):
+    title: str | None = None
+    body: str | None = None
+
+
+class CommentCreate(BaseModel):
+    body: str
+
+
+class CommentReturn(CommentCreate):
+    id: int
+    user_id: int
+    tweet_id: int
+    created_at: datetime
+    updated_at: datetime

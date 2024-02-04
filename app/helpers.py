@@ -1,32 +1,135 @@
-from dotenv import dotenv_values
-from pathlib import Path
-
-
-
-def load_configs() -> dict:
-    """
-    Load configuration variables about the database etc.
-    """
-    path_to_env = Path(__file__).parent.parent.joinpath('configs.env')
-    return dotenv_values(path_to_env)
+import re
+from os import environ
+from dotenv import load_dotenv
+import phonenumbers
+from datetime import datetime
 
 
 def create_db_url() -> str:
-    env_vars = load_configs()
+    load_dotenv()
     db_url = "%s://%s:%s@%s/%s" % (
-        env_vars["DB_SERVICE"],
-        env_vars["DB_USERNAME"],
-        env_vars["DB_PASSWORD"],
-        env_vars["DB_HOST"],
-        env_vars["DB_NAME"],
+        environ["DB_SERVICE"],
+        environ["DB_USERNAME"],
+        environ["DB_PASSWORD"],
+        environ["DB_HOST"],
+        environ["DB_NAME"],
     )
     return db_url
 
 
 def get_security_configs() -> dict[str]:
-    env_vars = load_configs()
+    load_dotenv()
     return {
-        "TOKEN_CREATION_SECRET_KEY": env_vars["TOKEN_CREATION_SECRET_KEY"],
-        "HASH_ALGORITHM": env_vars["HASH_ALGORITHM"],
-        "ACCESS_TOKEN_EXPIRE_MINUTES": int(env_vars["ACCESS_TOKEN_EXPIRE_MINUTES"]),
+        "TOKEN_CREATION_SECRET_KEY": environ["TOKEN_CREATION_SECRET_KEY"],
+        "HASH_ALGORITHM": environ["HASH_ALGORITHM"],
+        "ACCESS_TOKEN_EXPIRE_MINUTES": int(
+            environ["ACCESS_TOKEN_EXPIRE_MINUTES"]
+        ),
     }
+
+
+class MetadataExtractor:
+    """
+    Extracts various metadata from the body or title of Tweets.
+
+    e.g. hashtags etc
+    """
+    @staticmethod
+    def extract_hashtags(tweet: dict) -> list[str | None]:
+        """
+        Given a tweet, extracts the hashtags from the title and
+        body. Hashtags are extracted in lowercase and no duplicates
+        are included.
+        """
+        hashtag_regex = re.compile(r"#(\w+)")
+        res = []
+        title_hashtags = hashtag_regex.findall(tweet["title"].lower())
+        body_hashtags = hashtag_regex.findall(tweet["body"].lower())
+        res.extend(title_hashtags)
+        res.extend(body_hashtags)
+        res_no_duplicates = list(set(res))
+        return res_no_duplicates
+
+    @staticmethod
+    def extract_mentions(item: dict) -> list[str | None]:
+        """
+        Given the body of a tweet or a comment, extracts the user mentions
+        from it. Mentions are extracted in lowercase and no duplicates
+        are included.
+        """
+        hashtag_regex = re.compile(r"@(\w+)")
+        res = []
+        mentions = hashtag_regex.findall(item["body"])
+        res.extend(mentions)
+        res_no_duplicates = list(set(res))
+        return res_no_duplicates
+
+
+class Validator:
+    """
+    Helper class that validates field constraints.
+    """
+    @staticmethod
+    def min_length(column_field: str, length: int) -> str:
+        """
+        Checks if a string field
+        """
+        if len(column_field) < length:
+            error_msg = (
+                f"{column_field} is too short! "
+                f"Must be at least >= {length}."
+            )
+            raise ValueError(error_msg)
+        return column_field
+
+    @staticmethod
+    def is_phone_number(phone_number) -> str:
+        try:
+            pn = phonenumbers.parse(phone_number, None)
+        except phonenumbers.NumberParseException as e:
+            raise ValueError(f"Not a valid phone number: {str(e)}")
+        if not phonenumbers.is_valid_number(pn):
+            raise ValueError("Not a valid phone number.")
+        return phone_number
+
+    @staticmethod
+    def is_strong(password: str) -> str:
+        """
+        Verify the strength of 'password'
+        """
+        min_password_len = 8
+        length_error = (
+            len(password) < min_password_len,
+            f"Needs at least {min_password_len} characters! "
+            f"Current: {len(password)}."
+            )
+        digit_error = (re.search(r"\d", password) is None,
+                       "Use at least 1 digit.")
+
+        uppercase_error = (re.search(r"[A-Z]", password) is None,
+                           "Use at least 1 uppercase letter.")
+
+        lowercase_error = (re.search(r"[a-z]", password) is None,
+                           "Use at least 1 lowercase letter.")
+
+        regex = r"[ !#$%&'()*+,-./[\\\]^_`{|}~"+r'"]'
+        symbol_error = (re.search(regex, password) is None,
+                        "Use at least 1 symbol.")
+
+        errors = (length_error, digit_error,
+                  uppercase_error, lowercase_error,
+                  symbol_error)
+        for error in errors:
+            if error[0]:
+                raise ValueError(f"Password is not strong enough: {error[1]}")
+        return password
+
+    @staticmethod
+    def date_not_in_future(date) -> str:
+        """
+        Verify the strength of 'password'
+        """
+        present = datetime.now()
+        if date > present.date():
+            raise ValueError("Future date is not acceptable.")
+        return date
